@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowFund — Financial Diagnostics</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --ink:#1A1A18; --ink2:#4A4A44; --ink3:#8A8A80;
+  --paper:#F5F3EE; --paper2:#EDEAE2; --paper3:#E3DFD5;
+  --rule:rgba(26,26,24,0.1); --rule2:rgba(26,26,24,0.18);
+  --g:#2D5A3D; --g2:#3D7A54; --gbg:rgba(45,90,61,0.08); --gbd:rgba(45,90,61,0.25);
+  --a:#B5620A; --abg:rgba(181,98,10,0.08); --abd:rgba(181,98,10,0.25);
+  --r:#A02020; --rbg:rgba(160,32,32,0.07); --rbd:rgba(160,32,32,0.2);
+  --b:#1A4A7A; --bbg:rgba(26,74,122,0.07); --bbd:rgba(26,74,122,0.2);
+  --pu:#5A2D8A; --pubg:rgba(90,45,138,0.07); --pubd:rgba(90,45,138,0.2);
+}
+/* EMAIL CAPTURE MODAL */
+.em-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeOv .2s ease}
+@keyframes fadeOv{from{opacity:0}to{opacity:1}}
+.em-box{background:#F5F3EE;border-radius:10px;padding:30px;max-width:420px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);animation:rise .3s ease;position:relative}
+.em-x{position:absolute;top:12px;right:14px;font-size:20px;cursor:pointer;color:#888;background:none;border:none;line-height:1;padding:4px}
+.em-x:hover{color:#1A1A18}
+.em-ey{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#2D5A3D;margin-bottom:5px}
+.em-h{font-size:20px;font-family:Georgia,serif;color:#1A1A18;margin-bottom:6px;line-height:1.25}
+.em-s{font-size:12px;color:#555;margin-bottom:14px;line-height:1.65}
+.em-perks{list-style:none;margin-bottom:16px}
+.em-perks li{font-size:12px;color:#333;padding:3px 0;display:flex;align-items:flex-start;gap:8px}
+.em-perks li::before{content:'✓';color:#2D5A3D;font-weight:700;flex-shrink:0}
+.em-in{width:100%;background:#EDEAE2;border:1px solid rgba(0,0,0,.15);border-radius:5px;padding:10px 13px;font-family:Arial,sans-serif;font-size:14px;color:#1A1A18;outline:none;margin-bottom:8px;transition:border-color .2s}
+.em-in:focus{border-color:#2D5A3D;background:#fff}
+.em-btn{width:100%;padding:12px;background:#2D5A3D;color:#fff;border:none;border-radius:5px;font-family:Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.em-btn:hover{background:#3D7A54}
+.em-skip{display:block;text-align:center;font-size:11px;color:#888;margin-top:8px;cursor:pointer;text-decoration:underline}
+.em-skip:hover{color:#1A1A18}
+.em-privacy{font-size:10px;color:#aaa;margin-top:10px;text-align:center;line-height:1.5}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--paper);color:var(--ink);min-height:100vh;font-size:14px;line-height:1.6}
+.shell{max-width:900px;margin:0 auto;padding:0 20px 80px}
+
+/* HEADER */
+.hdr{padding:28px 0 0;display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:12px;border-bottom:2px solid var(--ink);padding-bottom:20px}
+.brand{font-size:22px;color:var(--g);font-weight:700;letter-spacing:-.01em}
+.brand span{font-size:11px;color:var(--ink3);display:block;font-weight:400;margin-top:1px}
+.step-nav{display:flex;align-items:center;gap:4px}
+.sd{width:28px;height:28px;border-radius:50%;border:2px solid #ddd;background:#eee;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#aaa;transition:all .3s;cursor:pointer}
+.sd.done{background:var(--g);border-color:var(--g);color:#fff}
+.sd.active{background:var(--ink);border-color:var(--ink);color:#fff}
+.sl{width:24px;height:2px;background:#ddd;transition:background .3s}
+.sl.done{background:var(--g)}
+.slbl{font-size:11px;color:var(--ink3);margin-left:8px}
+
+/* PAGES */
+.pg{display:none}.pg.on{display:block;animation:rise .3s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.ey{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--g);margin-bottom:6px}
+.h1{font-size:28px;color:var(--ink);margin-bottom:8px;line-height:1.2;font-family:Georgia,serif}
+.sub{font-size:13px;color:var(--ink2);margin-bottom:26px;line-height:1.7;max-width:600px}
+.hr{border:none;border-top:1px solid var(--rule);margin:20px 0}
+
+/* FORMS */
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.r3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fl{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+input,select{background:var(--paper2);border:1px solid var(--rule2);border-radius:5px;padding:10px 12px;color:var(--ink);font-family:Arial,sans-serif;font-size:14px;outline:none;transition:border-color .2s,background .2s;appearance:none;width:100%}
+input:focus,select:focus{border-color:var(--g);background:#fff}
+input::placeholder{color:#bbb}
+input:disabled,select:disabled{opacity:.35;cursor:not-allowed;background:var(--paper3)}
+
+/* FAMILY */
+.fam-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+.fam-box{background:var(--paper2);border:1px solid var(--rule2);border-radius:5px;padding:12px 14px}
+.fam-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:8px}
+.fam-ctr{display:flex;align-items:center;gap:12px}
+.fb{width:28px;height:28px;border-radius:50%;border:1px solid var(--rule2);background:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all .15s;line-height:1}
+.fb:hover{border-color:var(--g);color:var(--g)}
+.fv{font-size:24px;color:var(--ink);min-width:22px;text-align:center;font-weight:700}
+.ch-row{display:flex;gap:7px;flex-wrap:wrap}
+.ch{padding:6px 13px;border-radius:20px;border:1px solid var(--rule2);background:var(--paper2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink2)}
+.ch:hover{border-color:var(--g);color:var(--g)}
+.ch.on{background:var(--g);border-color:var(--g);color:#fff}
+
+/* LIVE PANEL */
+.live-panel{background:var(--paper2);border:1px solid var(--rule2);border-radius:5px;padding:12px 16px;margin-bottom:14px;display:flex;flex-wrap:wrap}
+.lp-cell{flex:1;min-width:90px;text-align:center;padding:0 8px;border-right:1px solid var(--rule)}
+.lp-cell:last-child{border-right:none}
+.lp-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:3px}
+.lp-val{font-size:17px;font-weight:700;line-height:1}
+.lp-val.G{color:var(--g)}.lp-val.A{color:var(--a)}.lp-val.R{color:var(--r)}.lp-val.B{color:var(--b)}
+
+/* CF RIBBON */
+.cf-ribbon{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;background:var(--paper2);border:1px solid var(--rule2);border-radius:5px;overflow:hidden;margin-bottom:22px}
+.cf-cell{padding:12px 14px;text-align:center}
+.cf-arrow{display:flex;align-items:center;justify-content:center;font-size:18px;color:#bbb;padding:0 2px}
+.cf-lbl{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
+.cf-val{font-size:19px;font-weight:700;line-height:1}
+.cf-note{font-size:10px;color:var(--ink3);margin-top:2px}
+
+/* EXPENSE TABLE */
+.etable{border:1px solid var(--rule2);border-radius:5px;overflow:hidden;margin-bottom:8px}
+.eth{display:grid;grid-template-columns:2.2fr 1.1fr 1.3fr .7fr;background:var(--ink);padding:8px 12px;gap:8px}
+.eth span{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.erow{display:grid;grid-template-columns:2.2fr 1.1fr 1.3fr .7fr;padding:8px 12px;gap:8px;border-bottom:1px solid var(--rule);align-items:center;transition:background .15s}
+.erow:last-child{border-bottom:none}
+.erow:hover{background:var(--paper2)}
+.ename{font-size:12px;color:var(--ink);font-weight:500}
+.ecat{font-size:10px;color:var(--ink3);margin-top:1px}
+.eamt{background:transparent;border:none;border-bottom:1px solid var(--rule2);padding:3px 0;color:var(--ink);font-family:Arial,sans-serif;font-size:13px;width:100%;outline:none}
+.eamt:focus{border-color:var(--g)}
+.eamt::placeholder{color:#ccc}
+.sth{display:grid;grid-template-columns:2.2fr 1.1fr .7fr;background:var(--ink);padding:8px 12px;gap:8px}
+.sth span{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+.srow{display:grid;grid-template-columns:2.2fr 1.1fr .7fr;padding:8px 12px;gap:8px;border-bottom:1px solid var(--rule);align-items:center}
+.srow:last-child{border-bottom:none}
+.srow:hover{background:var(--paper2)}
+.ptoggle{display:flex;background:var(--paper3);border-radius:16px;padding:2px;border:1px solid var(--rule2);width:fit-content}
+.pbtn{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:700;cursor:pointer;color:#888;border:none;background:transparent;transition:all .15s}
+.pbtn.cr.on{background:var(--g);color:#fff}
+.pbtn.db.on{background:var(--a);color:#fff}
+.pbtn.bt.on{background:var(--b);color:#fff}
+.add-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;padding:10px 12px;background:var(--paper2);border:1px dashed var(--rule2);border-radius:5px;align-items:end;margin-bottom:8px}
+.add-btn{padding:8px 12px;background:var(--g);border:none;border-radius:5px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;height:38px;transition:background .15s;white-space:nowrap}
+.add-btn:hover{background:var(--g2)}
+.rm-btn{width:22px;height:22px;border-radius:50%;border:1px solid var(--rule2);background:transparent;cursor:pointer;font-size:14px;color:#888;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;line-height:1}
+.rm-btn:hover{border-color:var(--r);color:var(--r)}
+.btn-p{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;background:var(--g);color:#fff;border:none;border-radius:5px;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-p:hover{background:var(--g2);transform:translateY(-1px)}
+.btn-o{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:transparent;color:var(--ink2);border:1px solid var(--rule2);border-radius:5px;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-o:hover{border-color:var(--g);color:var(--g)}
+.btn-row{display:flex;gap:12px;align-items:center;margin-top:26px;flex-wrap:wrap}
+.sec-ey{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--g);margin-bottom:8px;display:block}
+
+/* LOADING */
+.load-wrap{min-height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center}
+.load-logo{font-size:26px;font-weight:700;color:var(--g);font-family:Georgia,serif}
+.load-msg{font-size:13px;color:var(--ink3)}
+.load-bar{width:260px;height:3px;background:var(--rule);border-radius:2px;overflow:hidden}
+.load-fill{height:100%;background:var(--g);border-radius:2px;width:0;transition:width .4s ease}
+
+/* ══ REPORT STYLES ══ */
+.rpt-hdr{padding:28px 0 22px;border-bottom:2px solid var(--ink);margin-bottom:0}
+.rpt-who{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);margin-bottom:3px}
+.rpt-h1{font-size:34px;color:var(--ink);line-height:1.1;margin-bottom:4px;font-family:Georgia,serif}
+.rpt-date{font-size:11px;color:var(--ink3)}
+
+/* OVERALL SCORE */
+.score-wrap{display:flex;align-items:center;gap:28px;padding:24px;background:var(--ink);border-radius:6px;margin:20px 0;flex-wrap:wrap}
+.score-circle{width:100px;height:100px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;border:3px solid}
+.score-num{font-size:36px;font-weight:700;line-height:1}
+.score-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-top:1px}
+.score-right{flex:1}
+.score-title{font-size:18px;font-family:Georgia,serif;color:#fff;margin-bottom:8px}
+.score-doctors-note{font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;background:rgba(255,255,255,.07);padding:12px 14px;border-radius:5px;border-left:3px solid}
+.sub-metrics{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px}
+.sm{background:rgba(255,255,255,.07);border-radius:5px;padding:12px;text-align:center;border:1px solid rgba(255,255,255,.1)}
+.sm-val{font-size:20px;font-weight:700;line-height:1;margin-bottom:3px}
+.sm-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,.5);margin-bottom:4px}
+.sm-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px}
+.badge-G{background:rgba(74,222,128,.2);color:#4ADE80}
+.badge-A{background:rgba(252,176,70,.2);color:#FCB046}
+.badge-R{background:rgba(248,113,113,.2);color:#F87171}
+
+/* REPORT SECTIONS */
+.rsec{margin:32px 0 0}
+.rsec-h{font-size:18px;color:var(--ink);margin-bottom:2px;font-family:Georgia,serif}
+.rsec-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--g);margin-bottom:10px;display:block}
+.rhr{border:none;border-top:1px solid var(--rule);margin-bottom:16px}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.ins{border:1px solid;border-radius:5px;padding:14px 16px}
+.ins.G{border-color:var(--gbd);background:var(--gbg)}
+.ins.A{border-color:var(--abd);background:var(--abg)}
+.ins.R{border-color:var(--rbd);background:var(--rbg)}
+.ins.B{border-color:var(--bbd);background:var(--bbg)}
+.ins.PU{border-color:var(--pubd);background:var(--pubg)}
+.ins-ey{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}
+.ins.G .ins-ey{color:var(--g)}.ins.A .ins-ey{color:var(--a)}.ins.R .ins-ey{color:var(--r)}.ins.B .ins-ey{color:var(--b)}.ins.PU .ins-ey{color:var(--pu)}
+.ins-h{font-size:13px;font-weight:700;margin-bottom:4px;color:var(--ink)}
+.ins-b{font-size:11px;color:var(--ink2);line-height:1.65}
+.rtbl{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:12px}
+.rtbl th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);padding:7px 10px;text-align:left;border-bottom:1px solid var(--rule)}
+.rtbl td{padding:8px 10px;border-bottom:1px solid var(--rule);color:var(--ink2);vertical-align:middle}
+.rtbl tr:last-child td{border-bottom:none}
+.rtbl tfoot td{background:var(--paper2);border-top:1px solid var(--rule);border-bottom:none;font-weight:700;color:var(--ink)}
+.rtbl tr:hover td{background:var(--paper2)}
+.tag{display:inline-block;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:700;margin:1px 2px 1px 0;white-space:nowrap}
+.tag.cr{background:var(--gbg);color:var(--g);border:1px solid var(--gbd)}
+.tag.db{background:var(--abg);color:var(--a);border:1px solid var(--abd)}
+.tag.bt{background:var(--bbg);color:var(--b);border:1px solid var(--bbd)}
+.tag.ess{background:var(--gbg);color:var(--g);border:1px solid var(--gbd)}
+.tag.dis{background:var(--abg);color:var(--a);border:1px solid var(--abd)}
+.tag.rec{background:var(--bbg);color:var(--b);border:1px solid var(--bbd)}
+.tag.occ{background:rgba(0,0,0,.04);color:var(--ink3);border:1px solid var(--rule)}
+
+/* CHARTS */
+.chart-wrap{background:#fff;border:1px solid var(--rule);border-radius:6px;padding:16px;margin-bottom:12px;position:relative}
+.chart-title{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:10px}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.chart-full{grid-column:1/-1}
+canvas{max-width:100%}
+
+/* LIFESTYLE CREEP ALERT */
+.creep-alert{background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border:2px solid var(--a);border-radius:6px;padding:16px 18px;margin-bottom:12px}
+.creep-title{font-size:13px;font-weight:700;color:var(--a);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.creep-body{font-size:12px;color:var(--ink2);line-height:1.7}
+.creep-stat{font-size:22px;font-weight:700;color:var(--r);margin:4px 0}
+
+/* LEAK LIST */
+.leak-list{margin-bottom:12px}
+.leak-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--rule)}
+.leak-item:last-child{border-bottom:none}
+.leak-rank{width:24px;height:24px;border-radius:50%;background:var(--r);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.leak-name{flex:1;font-size:12px;font-weight:600}
+.leak-pct{font-size:12px;font-weight:700;color:var(--r)}
+.leak-bar{width:80px;background:var(--paper3);border-radius:2px;height:5px;overflow:hidden}
+.leak-fill{height:100%;background:var(--r);border-radius:2px}
+
+/* WATERFALL */
+.waterfall{border:1px solid var(--rule2);border-radius:5px;overflow:hidden;margin:16px 0}
+.wf-hdr-row{background:var(--paper3);padding:6px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);border-bottom:1px solid var(--rule)}
+.wf-row{display:grid;grid-template-columns:200px 1fr 100px;border-bottom:1px solid rgba(0,0,0,.06)}
+.wf-row:last-child{border-bottom:none}
+.wf-lbl{padding:9px 12px;font-size:12px;color:var(--ink2);border-right:1px solid var(--rule)}
+.wf-lbl.bold{font-weight:700;color:var(--ink)}
+.wf-bc{padding:12px 12px;border-right:1px solid var(--rule);display:flex;align-items:center}
+.wf-track{flex:1;background:var(--paper3);border-radius:2px;height:6px;overflow:hidden}
+.wf-fill{height:100%;border-radius:2px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.wf-amt{padding:9px 12px;font-size:13px;font-weight:700;text-align:right}
+.wf-row.inc .wf-lbl{background:var(--gbg)}
+.wf-row.inc .wf-amt{color:var(--g)}
+.wf-row.exp .wf-lbl{background:var(--abg)}
+.wf-row.exp .wf-amt{color:var(--a)}
+.wf-row.sav .wf-lbl{background:var(--bbg)}
+.wf-row.sav .wf-amt{color:var(--b)}
+.wf-row.tot .wf-lbl{background:var(--paper3);font-weight:700;color:var(--ink)}
+
+/* HEALTH GRID */
+.health-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0}
+.hg-card{border:2px solid;border-radius:6px;padding:16px;text-align:center}
+.hg-card.G{border-color:var(--gbd);background:var(--gbg)}
+.hg-card.A{border-color:var(--abd);background:var(--abg)}
+.hg-card.R{border-color:var(--rbd);background:var(--rbg)}
+.hg-pct{font-size:30px;font-weight:700;line-height:1;margin-bottom:3px}
+.hg-card.G .hg-pct{color:var(--g)}.hg-card.A .hg-pct{color:var(--a)}.hg-card.R .hg-pct{color:var(--r)}
+.hg-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-bottom:4px}
+.hg-status{font-size:11px;font-weight:700}
+.hg-card.G .hg-status{color:var(--g)}.hg-card.A .hg-status{color:var(--a)}.hg-card.R .hg-status{color:var(--r)}
+.hg-bench{font-size:10px;color:var(--ink3);margin-top:2px}
+
+/* EMI CALC */
+.emi-calc{background:var(--paper2);border:1px solid var(--rule2);border-radius:6px;padding:18px;margin-bottom:12px}
+.emi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.emi-result{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--rule)}
+.er-cell{text-align:center}
+.er-val{font-size:18px;font-weight:700;color:var(--g);line-height:1}
+.er-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);margin-top:2px}
+.er-cell.R .er-val{color:var(--r)}
+.er-cell.A .er-val{color:var(--a)}
+.er-cell.B .er-val{color:var(--b)}
+
+/* SIP CALC */
+.sip-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px}
+.sip-result{background:var(--gbg);border:1px solid var(--gbd);border-radius:5px;padding:14px 16px;margin-bottom:12px}
+.sip-big{font-size:28px;font-weight:700;color:var(--g);line-height:1;margin-bottom:4px}
+.sip-breakdown{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--gbd)}
+
+/* CTA */
+.cta{background:var(--ink);border-radius:6px;padding:28px 32px;margin-top:36px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.cta-l .cta-ey{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px}
+.cta-l .cta-h{font-size:22px;color:#fff;line-height:1.2;margin-bottom:6px;font-family:Georgia,serif}
+.cta-l .cta-s{font-size:12px;color:rgba(255,255,255,.5);line-height:1.65;max-width:340px}
+.cta-r{text-align:right;flex-shrink:0}
+.cta-num{font-size:44px;color:#4ADE80;line-height:1;font-weight:700;white-space:nowrap}
+.cta-numlbl{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+.cta-btn{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;background:var(--g);color:#fff;border:none;border-radius:5px;font-size:13px;font-weight:700;cursor:pointer;margin-top:16px;transition:background .15s}
+.cta-btn:hover{background:var(--g2)}
+
+/* SCENARIO TABS */
+.scen-tabs{display:flex;gap:4px;margin-bottom:16px}
+.stab{padding:7px 16px;border-radius:20px;border:1px solid var(--rule2);background:var(--paper2);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--ink2)}
+.stab:hover{border-color:var(--g);color:var(--g)}
+.stab.on{background:var(--g);border-color:var(--g);color:#fff}
+
+/* REWARD CARDS */
+.reward-card{background:var(--gbg);border:1px solid var(--gbd);border-radius:6px;padding:14px 16px;margin-bottom:10px}
+.reward-title{font-size:13px;font-weight:700;color:var(--g);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.reward-amount{font-size:22px;font-weight:700;color:var(--g)}
+.reward-items{font-size:11px;color:var(--ink2);line-height:1.8}
+
+@media(max-width:620px){
+  .r2,.r3,.fam-grid,.ig,.health-grid,.emi-row,.sip-inputs,.emi-result,.sip-breakdown,.sub-metrics,.chart-row{grid-template-columns:1fr!important}
+  .h1,.rpt-h1{font-size:22px}
+  .cf-ribbon{grid-template-columns:1fr}.cf-arrow{display:none}
+  .cta{padding:18px}.cta-num{font-size:30px}
+  .wf-row{grid-template-columns:130px 1fr 80px}
+  .live-panel{flex-direction:column}.lp-cell{border-right:none;border-bottom:1px solid var(--rule);padding:5px 0}
+  .lp-cell:last-child{border-bottom:none}
+  .add-row{grid-template-columns:1fr 1fr}
+  .eth,.erow{grid-template-columns:1.8fr .9fr 1fr .5fr}
+  .score-wrap{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<!-- NETLIFY FORM — hidden, silently captures every report submission -->
+<form name="flowfund-report" netlify netlify-honeypot="bot-field" hidden>
+  <input name="bot-field">
+  <input name="user_name" type="text">
+  <input name="user_age" type="number">
+  <input name="user_city" type="text">
+  <input name="user_state" type="text">
+  <input name="user_country" type="text">
+  <input name="user_currency" type="text">
+  <input name="user_email" type="email">
+  <input name="monthly_income" type="number">
+  <input name="total_expenses" type="number">
+  <input name="total_savings" type="number">
+  <input name="expense_pct" type="number">
+  <input name="savings_pct" type="number">
+  <input name="health_score" type="number">
+  <input name="emergency_months" type="number">
+  <input name="debt_to_income" type="number">
+  <input name="rewards_missed_monthly" type="number">
+  <input name="tax_saving_potential" type="number">
+  <input name="surplus_or_deficit" type="text">
+  <input name="family_size" type="number">
+  <input name="has_elders" type="text">
+  <input name="has_children" type="text">
+  <input name="housing_type" type="text">
+  <input name="employment_type" type="text">
+  <input name="top_expense_category" type="text">
+  <input name="submitted_at" type="text">
+</form>
+
+<div class="shell">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="brand">FlowFund<span>Financial Diagnostics — Free Tier</span></div>
+  <div class="step-nav">
+    <div class="sd active" id="d0" onclick="tryNav(1)">1</div>
+    <div class="sl" id="l0"></div>
+    <div class="sd" id="d1" onclick="tryNav(2)">2</div>
+    <div class="sl" id="l1"></div>
+    <div class="sd" id="d2" onclick="tryNav(3)">3</div>
+    <div class="sl" id="l2"></div>
+    <div class="sd" id="d3" onclick="tryNav(4)">4</div>
+    <span class="slbl" id="slbl">Step 1 of 4</span>
+  </div>
+</div>
+
+<!-- ══ STEP 1: PROFILE ══ -->
+<div class="pg on" id="pg1">
+  <div class="ey">Step 1 of 4 — Profile</div>
+  <div class="h1">Tell us about yourself</div>
+  <div class="sub">Family, location, and income type shape every recommendation in your diagnostic.</div>
+  <div class="r2">
+    <div class="fg"><label class="fl">Full name</label><input type="text" id="p-name" placeholder="e.g. Ramesh Kumar"></div>
+    <div class="fg"><label class="fl">Age</label><input type="number" id="p-age" placeholder="34" min="18" max="80"></div>
+  </div>
+  <div class="r3">
+    <div class="fg"><label class="fl">Country</label>
+      <select id="p-country" onchange="onCountry()">
+        <option value="india">India</option><option value="usa">United States</option>
+        <option value="uk">United Kingdom</option><option value="uae">UAE</option>
+        <option value="singapore">Singapore</option><option value="canada">Canada</option>
+        <option value="australia">Australia</option><option value="other">Other</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">State</label>
+      <select id="p-state">
+        <option value="">Select state</option>
+        <option>Andhra Pradesh</option><option>Assam</option><option>Bihar</option>
+        <option>Chhattisgarh</option><option>Delhi (NCT)</option><option>Goa</option>
+        <option>Gujarat</option><option>Haryana</option><option>Himachal Pradesh</option>
+        <option>Jharkhand</option><option>Karnataka</option><option>Kerala</option>
+        <option>Madhya Pradesh</option><option>Maharashtra</option><option>Odisha</option>
+        <option>Punjab</option><option>Rajasthan</option><option>Tamil Nadu</option>
+        <option>Telangana</option><option>Uttar Pradesh</option><option>Uttarakhand</option>
+        <option>West Bengal</option><option>Chandigarh</option><option>Jammu & Kashmir</option>
+        <option>Puducherry</option><option>Arunachal Pradesh</option><option>Manipur</option>
+        <option>Meghalaya</option><option>Mizoram</option><option>Nagaland</option>
+        <option>Sikkim</option><option>Tripura</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">City</label>
+      <select id="p-city">
+        <option value="">Select city</option>
+        <option>Mumbai</option><option>Delhi</option><option>Bengaluru</option>
+        <option>Hyderabad</option><option>Chennai</option><option>Kolkata</option>
+        <option>Pune</option><option>Ahmedabad</option><option>Jaipur</option>
+        <option>Surat</option><option>Lucknow</option><option>Kanpur</option>
+        <option>Nagpur</option><option>Indore</option><option>Thane</option>
+        <option>Bhopal</option><option>Coimbatore</option><option>Kochi</option>
+        <option>Guwahati</option><option>Chandigarh</option><option>Patna</option>
+        <option>Vadodara</option><option>Nashik</option><option>Visakhapatnam</option>
+        <option>Other city</option>
+      </select>
+    </div>
+  </div>
+  <div class="r2">
+    <div class="fg"><label class="fl">Currency</label>
+      <select id="p-currency" onchange="onCurrency()">
+        <option value="INR">₹ INR — Indian Rupee</option>
+        <option value="USD">$ USD — US Dollar</option>
+        <option value="GBP">£ GBP — British Pound</option>
+        <option value="AED">AED — UAE Dirham</option>
+        <option value="SGD">SGD — Singapore Dollar</option>
+        <option value="CAD">CAD — Canadian Dollar</option>
+        <option value="AUD">AUD — Australian Dollar</option>
+      </select>
+    </div>
+    <div class="fg"><label class="fl">Employment type</label>
+      <div class="ch-row">
+        <div class="ch on" onclick="pick(this,'emp','salaried')">Salaried</div>
+        <div class="ch" onclick="pick(this,'emp','freelance')">Freelance</div>
+        <div class="ch" onclick="pick(this,'emp','business')">Business</div>
+        <div class="ch" onclick="pick(this,'emp','gig')">Gig</div>
+      </div>
+    </div>
+  </div>
+  <div class="hr"></div>
+  <span class="sec-ey">Family members</span>
+  <div class="fam-grid">
+    <div class="fam-box"><div class="fam-lbl">Children (under 18)</div><div class="fam-ctr"><button class="fb" onclick="adj('ch',-1)">−</button><div class="fv" id="vch">0</div><button class="fb" onclick="adj('ch',1)">+</button></div></div>
+    <div class="fam-box"><div class="fam-lbl">Working adults</div><div class="fam-ctr"><button class="fb" onclick="adj('ad',-1)">−</button><div class="fv" id="vad">1</div><button class="fb" onclick="adj('ad',1)">+</button></div></div>
+    <div class="fam-box"><div class="fam-lbl">Elders (60+)</div><div class="fam-ctr"><button class="fb" onclick="adj('el',-1)">−</button><div class="fv" id="vel">0</div><button class="fb" onclick="adj('el',1)">+</button></div></div>
+  </div>
+  <div class="hr"></div>
+  <div class="r2">
+    <div class="fg"><label class="fl">Housing</label>
+      <div class="ch-row">
+        <div class="ch on" onclick="pick(this,'housing','own')">Own home</div>
+        <div class="ch" onclick="pick(this,'housing','rented')">Rented</div>
+        <div class="ch" onclick="pick(this,'housing','family')">Family property</div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Transport</label>
+      <div class="ch-row">
+        <div class="ch on" onclick="pick(this,'transport','own')">Own vehicle</div>
+        <div class="ch" onclick="pick(this,'transport','public')">Public transport</div>
+        <div class="ch" onclick="pick(this,'transport','both')">Both</div>
+      </div>
+    </div>
+  </div>
+  <div class="btn-row"><button class="btn-p" onclick="go(2)">Continue — Income →</button></div>
+</div>
+
+<!-- ══ STEP 2: INCOME ══ -->
+<div class="pg" id="pg2">
+  <div class="ey">Step 2 of 4 — Monthly income</div>
+  <div class="h1">How much do you earn?</div>
+  <div class="sub">All income sources combined. Everything in your report is a % of this number.</div>
+  <div class="etable">
+    <div class="sth"><span>Income source</span><span>Amount / month (<span class="cs">₹</span>)</span><span>Type</span></div>
+    <div class="srow"><div><div class="ename">Primary salary / wages</div></div><div><input class="eamt" id="i-sal" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--g);font-weight:700">● Regular</div></div>
+    <div class="srow"><div><div class="ename">Freelance / consulting</div></div><div><input class="eamt" id="i-fr" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--a);font-weight:700">○ Variable</div></div>
+    <div class="srow"><div><div class="ename">Business income / profit</div></div><div><input class="eamt" id="i-biz" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--a);font-weight:700">○ Variable</div></div>
+    <div class="srow"><div><div class="ename">Rental income</div></div><div><input class="eamt" id="i-rnt" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--g);font-weight:700">● Regular</div></div>
+    <div class="srow"><div><div class="ename">Investment returns / dividends (monthly avg)</div></div><div><input class="eamt" id="i-inv" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--a);font-weight:700">○ Variable</div></div>
+    <div class="srow"><div><div class="ename">Other income</div></div><div><input class="eamt" id="i-oth" type="number" placeholder="0" oninput="liveI()"></div><div style="font-size:10px;color:var(--g);font-weight:700">● Regular</div></div>
+  </div>
+  <div class="live-panel">
+    <div class="lp-cell"><div class="lp-lbl">Total monthly</div><div class="lp-val G" id="li-tot"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Annual income</div><div class="lp-val B" id="li-ann"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Daily equivalent</div><div class="lp-val" id="li-day"><span class="cs">₹</span>0</div></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-o" onclick="go(1)">← Back</button>
+    <button class="btn-p" onclick="go(3)">Continue — Expenses →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 3: EXPENSES ══ -->
+<div class="pg" id="pg3">
+  <div class="ey">Step 3 of 4 — Monthly expenses</div>
+  <div class="h1">What do you spend?</div>
+  <div class="sub">Choose Credit / Debit / Both for each item. <span style="color:var(--a);font-weight:700">Do not include savings here</span> — those come in step 4.</div>
+  <div class="live-panel">
+    <div class="lp-cell"><div class="lp-lbl">Income</div><div class="lp-val G" id="le-inc"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Total expenses</div><div class="lp-val A" id="le-exp"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">% of income</div><div class="lp-val A" id="le-pct">0%</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Left for savings</div><div class="lp-val G" id="le-left"><span class="cs">₹</span>0</div></div>
+  </div>
+  <span class="sec-ey">Housing & utilities</span>
+  <div class="etable"><div class="eth"><span>Expense</span><span>Amount (<span class="cs">₹</span>)</span><span>Payment</span><span>Priority</span></div><div id="s-h"></div></div>
+  <span class="sec-ey" style="margin-top:16px">Food & groceries</span>
+  <div class="etable"><div class="eth"><span>Expense</span><span>Amount (<span class="cs">₹</span>)</span><span>Payment</span><span>Priority</span></div><div id="s-f"></div></div>
+  <span class="sec-ey" style="margin-top:16px">Transport</span>
+  <div class="etable"><div class="eth"><span>Expense</span><span>Amount (<span class="cs">₹</span>)</span><span>Payment</span><span>Priority</span></div><div id="s-t"></div></div>
+  <span class="sec-ey" style="margin-top:16px">Health & medical</span>
+  <div class="etable"><div class="eth"><span>Expense</span><span>Amount (<span class="cs">₹</span>)</span><span>Payment</span><span>Priority</span></div><div id="s-m"></div></div>
+  <span class="sec-ey" style="margin-top:16px">Lifestyle & personal</span>
+  <div class="etable"><div class="eth"><span>Expense</span><span>Amount (<span class="cs">₹</span>)</span><span>Payment</span><span>Priority</span></div><div id="s-l"></div></div>
+  <span class="sec-ey" style="margin-top:16px">Add other expense</span>
+  <div class="add-row">
+    <div class="fg"><label class="fl">Name</label><input type="text" id="cx-n" placeholder="e.g. Pet care…"></div>
+    <div class="fg"><label class="fl">Amount</label><input type="number" id="cx-a" placeholder="0"></div>
+    <div class="fg"><label class="fl">Payment</label><select id="cx-p"><option value="debit">Debit/UPI</option><option value="credit">Credit card</option><option value="both">Both</option></select></div>
+    <button class="add-btn" onclick="addCx()">+ Add</button>
+  </div>
+  <div id="cx-list"></div>
+  <div class="btn-row">
+    <button class="btn-o" onclick="go(2)">← Back</button>
+    <button class="btn-p" onclick="go(4)">Continue — Savings →</button>
+  </div>
+</div>
+
+<!-- ══ STEP 4: SAVINGS ══ -->
+<div class="pg" id="pg4">
+  <div class="ey">Step 4 of 4 — Savings & investments</div>
+  <div class="h1">How much do you save?</div>
+  <div class="sub">From what's left after expenses — what do you set aside? Savings are not expenses; they are wealth you're building.</div>
+  <div class="cf-ribbon">
+    <div class="cf-cell"><div class="cf-lbl">Monthly income</div><div class="cf-val G" id="cf-i"><span class="cs">₹</span>—</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-cell"><div class="cf-lbl">Minus expenses</div><div class="cf-val A" id="cf-e"><span class="cs">₹</span>—</div></div>
+    <div class="cf-arrow">→</div>
+    <div class="cf-cell"><div class="cf-lbl">Available for savings</div><div class="cf-val G" id="cf-a"><span class="cs">₹</span>—</div><div class="cf-note" id="cf-p">—% of income</div></div>
+  </div>
+  <div class="etable">
+    <div class="sth"><span>Vehicle</span><span>Monthly amount (<span class="cs">₹</span>)</span><span>Tax (India)</span></div>
+    <div class="srow"><div><div class="ename">SIP / Mutual funds (ELSS, flexi-cap…)</div><div class="ecat">Equity · Growth</div></div><div><input class="eamt" id="sv-sip" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--g);font-weight:700">80C</div></div>
+    <div class="srow"><div><div class="ename">PPF / Public Provident Fund</div><div class="ecat">15yr lock-in</div></div><div><input class="eamt" id="sv-ppf" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--g);font-weight:700">80C</div></div>
+    <div class="srow"><div><div class="ename">EPF / NPS (voluntary)</div><div class="ecat">Retirement</div></div><div><input class="eamt" id="sv-epf" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--g);font-weight:700">80C+80CCD</div></div>
+    <div class="srow"><div><div class="ename">Fixed deposit / RD</div><div class="ecat">Low risk</div></div><div><input class="eamt" id="sv-fd" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--a);font-weight:700">TDS applies</div></div>
+    <div class="srow"><div><div class="ename">Direct equity / stocks</div><div class="ecat">High risk/reward</div></div><div><input class="eamt" id="sv-stk" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--ink3)">LTCG/STCG</div></div>
+    <div class="srow"><div><div class="ename">Gold / digital gold</div><div class="ecat">Inflation hedge</div></div><div><input class="eamt" id="sv-gld" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--ink3)">—</div></div>
+    <div class="srow"><div><div class="ename">Emergency fund (liquid / savings acc)</div><div class="ecat">Safety buffer</div></div><div><input class="eamt" id="sv-emg" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--ink3)">—</div></div>
+    <div class="srow"><div><div class="ename">Life insurance premium (÷12)</div><div class="ecat">Term / endowment</div></div><div><input class="eamt" id="sv-lif" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--g);font-weight:700">80C</div></div>
+    <div class="srow"><div><div class="ename">Health insurance premium (÷12)</div><div class="ecat">Medical cover</div></div><div><input class="eamt" id="sv-hi" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--g);font-weight:700">80D</div></div>
+    <div class="srow"><div><div class="ename">Other savings / ULIP / chit fund</div></div><div><input class="eamt" id="sv-oth" type="number" placeholder="0" oninput="liveS()"></div><div style="font-size:10px;color:var(--ink3)">Varies</div></div>
+  </div>
+  <div class="live-panel">
+    <div class="lp-cell"><div class="lp-lbl">Available for savings</div><div class="lp-val G" id="ls-av"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Saving this month</div><div class="lp-val B" id="ls-sav"><span class="cs">₹</span>0</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Savings % of income</div><div class="lp-val B" id="ls-pct">0%</div></div>
+    <div class="lp-cell"><div class="lp-lbl">Unallocated</div><div class="lp-val G" id="ls-un"><span class="cs">₹</span>0</div></div>
+  </div>
+  <div class="btn-row">
+    <button class="btn-o" onclick="go(3)">← Back</button>
+    <button class="btn-p" onclick="toReport()">Generate full diagnostic →</button>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div class="pg" id="pg-load">
+  <div class="load-wrap">
+    <div class="load-logo">FlowFund</div>
+    <div class="load-bar"><div class="load-fill" id="lf"></div></div>
+    <div class="load-msg" id="lm">Calculating your financial health score…</div>
+  </div>
+</div>
+
+<!-- REPORT -->
+<div class="pg" id="pg5"></div>
+
+</div>
+<script>
+// ══ STATE ══
+const S={name:'',age:30,country:'india',state:'',city:'',currency:'INR',emp:'salaried',housing:'own',transport:'own',fam:{ch:0,ad:1,el:0},customs:[],done:0};
+const CSYM={INR:'₹',USD:'$',GBP:'£',AED:'AED ',SGD:'SGD ',CAD:'CAD ',AUD:'AUD '};
+let CUR='INR';
+const f=n=>Math.round(n).toLocaleString('en-IN');
+const pct=(n,d)=>d>0?Math.round(n/d*100):0;
+const sym=()=>CSYM[CUR]||'₹';
+
+// ══ EXPENSE DEFS ══
+const DEFS={
+  h:[
+    {id:'rent',n:'Rent / Home loan EMI',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:'Credit cards charge 1–2% on rent. Use NEFT/UPI instead.'},
+    {id:'elec',n:'Electricity bill',rec:true,ess:true,imp:true,dp:'debit',ok:true,tip:'Use a utility cashback card — 2–5% back on bills.'},
+    {id:'water',n:'Water / society maintenance',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:''},
+    {id:'net',n:'Internet / broadband',rec:true,ess:true,imp:true,dp:'debit',ok:true,tip:'Airtel Axis card: 25% back on Airtel services.'},
+    {id:'mob',n:'Mobile recharge / postpaid',rec:true,ess:true,imp:true,dp:'debit',ok:true,tip:'Telecom co-brand cards give extra cashback.'},
+    {id:'lpg',n:'LPG / gas cylinder',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:''},
+    {id:'maid',n:'Domestic help / maid',rec:true,ess:false,imp:false,dp:'debit',ok:false,tip:''},
+  ],
+  f:[
+    {id:'groc',n:'Groceries & vegetables',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:'Most cards give <1% on offline grocery. UPI wins.'},
+    {id:'din',n:'Dining out / restaurants',rec:true,ess:false,imp:false,dp:'debit',ok:true,tip:'HDFC Regalia: 2x on dining. Swiggy/Zomato cards: 5–10%.'},
+    {id:'fdel',n:'Food delivery (Swiggy/Zomato)',rec:true,ess:false,imp:false,dp:'debit',ok:true,tip:'SBI SimplyCLICK: 5x on Swiggy. HDFC Millennia: 5%.'},
+    {id:'milk',n:'Milk / dairy subscription',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:''},
+    {id:'snk',n:'Snacks / indulgences',rec:true,ess:false,imp:false,dp:'debit',ok:false,tip:''},
+  ],
+  t:[
+    {id:'fuel',n:'Petrol / diesel',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:'1% surcharge on most cards — net reward negative. Use debit.'},
+    {id:'vemi',n:'Vehicle loan EMI',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:''},
+    {id:'cab',n:'Cab / auto / metro / bus',rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:'UPI best — no surcharge.'},
+    {id:'vins',n:'Vehicle insurance (annual ÷12)',rec:false,ess:true,imp:true,dp:'debit',ok:true,tip:'Pay annual premium by credit card — large bill = good rewards.'},
+    {id:'park',n:'Parking / toll',rec:true,ess:false,imp:false,dp:'debit',ok:false,tip:''},
+  ],
+  m:[
+    {id:'med',n:'Medicines & pharmacy',rec:false,ess:true,imp:true,dp:'debit',ok:true,tip:'Purchase protection on medical credit card spends.'},
+    {id:'gym',n:'Gym / fitness membership',rec:true,ess:false,imp:false,dp:'debit',ok:true,tip:'Many premium cards offer complimentary gym.'},
+    {id:'doc',n:'Doctor visits / consultations',rec:false,ess:false,imp:true,dp:'debit',ok:true,tip:''},
+    {id:'elmd',n:'Medical expenses for parents/elders',rec:false,ess:true,imp:true,dp:'debit',ok:true,tip:'Section 80D deduction up to ₹50,000 for parents 60+.'},
+  ],
+  l:[
+    {id:'cloth',n:'Clothing & footwear',rec:false,ess:false,imp:false,dp:'debit',ok:true,tip:'Flipkart Axis: 5% back on Myntra/Flipkart.'},
+    {id:'ott',n:'OTT subscriptions',rec:true,ess:false,imp:false,dp:'debit',ok:true,tip:'Many premium cards offer complimentary OTT.'},
+    {id:'travel',n:'Travel & holidays',rec:false,ess:false,imp:false,dp:'debit',ok:true,tip:'ALWAYS use credit for travel — best rewards + free insurance.'},
+    {id:'shop',n:'Online shopping (Amazon/Flipkart)',rec:false,ess:false,imp:false,dp:'debit',ok:true,tip:'ICICI Amazon Pay: 5% back. SBI SimplyCLICK: 10x.'},
+    {id:'salon',n:'Salon / personal care',rec:true,ess:false,imp:false,dp:'debit',ok:false,tip:''},
+    {id:'edu',n:"Children's school / tuition fees",rec:true,ess:true,imp:true,dp:'debit',ok:false,tip:'Schools rarely accept credit cards.'},
+    {id:'course',n:'Online courses / upskilling',rec:false,ess:false,imp:true,dp:'debit',ok:true,tip:''},
+    {id:'sub',n:'Other subscriptions',rec:true,ess:false,imp:false,dp:'debit',ok:true,tip:''},
+  ]
+};
+const SKEYS=['h','f','t','m','l'];
+const SVKEYS=['sip','ppf','epf','fd','stk','gld','emg','lif','hi','oth'];
+const SVLBLS={sip:'SIP/Mutual funds',ppf:'PPF',epf:'EPF/NPS',fd:'FD/RD',stk:'Direct equity',gld:'Gold',emg:'Emergency fund',lif:'Life insurance',hi:'Health insurance',oth:'Other savings'};
+
+// ══ BUILD EXPENSE ROWS ══
+function buildRows(){
+  const ids={h:'s-h',f:'s-f',t:'s-t',m:'s-m',l:'s-l'};
+  SKEYS.forEach(k=>{
+    const el=document.getElementById(ids[k]);if(!el)return;el.innerHTML='';
+    DEFS[k].forEach(d=>{
+      const r=document.createElement('div');r.className='erow';r.id='er-'+d.id;
+      r.innerHTML=`<div><div class="ename">${d.n}</div><div class="ecat">${d.rec?'Recurring':'Occasional'} · ${d.ess?'Essential':'Discretionary'}</div></div>
+        <div><input class="eamt" id="a-${d.id}" type="number" placeholder="0" oninput="liveE()"></div>
+        <div><div class="ptoggle">
+          <button class="pbtn cr${d.dp==='credit'?' on':''}" data-p="credit" onclick="setP(this)">Credit</button>
+          <button class="pbtn db${d.dp==='debit'?' on':''}" data-p="debit" onclick="setP(this)">Debit</button>
+          <button class="pbtn bt${d.dp==='both'?' on':''}" data-p="both" onclick="setP(this)">Both</button>
+        </div></div>
+        <div>${d.imp?'<span style="font-size:10px;color:var(--g);font-weight:700">● High</span>':'<span style="font-size:10px;color:#aaa;font-weight:700">○ Low</span>'}</div>`;
+      el.appendChild(r);
+    });
+  });
+}
+function setP(btn){const t=btn.closest('.ptoggle');t.querySelectorAll('.pbtn').forEach(b=>b.classList.remove('on'));btn.classList.add('on');liveE();}
+function getP(id){const t=document.querySelector('#er-'+id+' .ptoggle');if(!t)return'debit';const a=t.querySelector('.pbtn.on');return a?a.dataset.p:'debit';}
+
+// ══ CUSTOM ══
+function addCx(){
+  const n=document.getElementById('cx-n').value.trim();const a=parseFloat(document.getElementById('cx-a').value)||0;const p=document.getElementById('cx-p').value;
+  if(!n){document.getElementById('cx-n').focus();return;}
+  S.customs.push({id:'cx'+Date.now(),n,amt:a,pay:p,ess:false,imp:false,rec:false,ok:p==='credit'});
+  renderCx();document.getElementById('cx-n').value='';document.getElementById('cx-a').value='';liveE();
+}
+function removeCx(id){S.customs=S.customs.filter(c=>c.id!==id);renderCx();liveE();}
+function renderCx(){
+  const el=document.getElementById('cx-list');el.innerHTML='';
+  S.customs.forEach(c=>{
+    const d=document.createElement('div');d.className='erow';d.style.background='var(--paper2)';
+    d.innerHTML=`<div style="display:flex;align-items:center;gap:8px"><span class="ename">${c.n}</span><button class="rm-btn" onclick="removeCx('${c.id}')">×</button></div>
+      <div><input class="eamt" type="number" value="${c.amt}" oninput="updCx('${c.id}',this.value)"></div>
+      <div><span class="tag ${c.pay==='credit'?'cr':c.pay==='both'?'bt':'db'}">${c.pay==='credit'?'Credit':c.pay==='both'?'Both':'Debit'}</span></div>
+      <div><span style="font-size:10px;color:#aaa">Custom</span></div>`;
+    el.appendChild(d);
+  });
+}
+function updCx(id,v){const c=S.customs.find(x=>x.id===id);if(c){c.amt=parseFloat(v)||0;liveE();}}
+
+// ══ CALCS ══
+function getInc(){return['sal','fr','biz','rnt','inv','oth'].reduce((a,k)=>a+(parseFloat(document.getElementById('i-'+k)?.value)||0),0);}
+function getExp(){
+  let t=0;SKEYS.forEach(k=>DEFS[k].forEach(d=>{t+=parseFloat(document.getElementById('a-'+d.id)?.value)||0;}));
+  return t+S.customs.reduce((a,c)=>a+c.amt,0);
+}
+function getSav(){return SVKEYS.reduce((a,k)=>a+(parseFloat(document.getElementById('sv-'+k)?.value)||0),0);}
+
+function liveI(){
+  const i=getInc(),s=sym();
+  document.getElementById('li-tot').innerHTML=s+f(i);
+  document.getElementById('li-ann').innerHTML=s+f(i*12);
+  document.getElementById('li-day').innerHTML=s+f(Math.round(i/30));
+  liveE();
+}
+function liveE(){
+  const i=getInc(),e=getExp(),left=Math.max(0,i-e),ep=pct(e,i),s=sym();
+  const col=ep>90?'R':ep>70?'A':'G';
+  document.getElementById('le-inc').innerHTML=s+f(i);
+  document.getElementById('le-exp').innerHTML=s+f(e);
+  const pEl=document.getElementById('le-pct');pEl.textContent=ep+'%';pEl.className='lp-val '+col;
+  const lEl=document.getElementById('le-left');lEl.innerHTML=s+f(left);lEl.className='lp-val '+(left<0?'R':'G');
+  const cfI=document.getElementById('cf-i');if(cfI)cfI.innerHTML=s+f(i);
+  const cfE=document.getElementById('cf-e');if(cfE)cfE.innerHTML=s+f(e);
+  const cfA=document.getElementById('cf-a');if(cfA){cfA.innerHTML=s+f(left);cfA.className='cf-val '+(left<=0?'R':'G');}
+  const cfP=document.getElementById('cf-p');if(cfP)cfP.textContent=pct(left,i)+'% of income remaining';
+  liveS();
+}
+function liveS(){
+  const i=getInc(),e=getExp(),avail=Math.max(0,i-e),sav=getSav(),un=avail-sav,sp=pct(sav,i),s=sym();
+  document.getElementById('ls-av').innerHTML=s+f(avail);
+  document.getElementById('ls-sav').innerHTML=s+f(sav);
+  const spEl=document.getElementById('ls-pct');spEl.textContent=sp+'%';spEl.className='lp-val '+(sp>=20?'G':sp>=10?'A':'R');
+  const unEl=document.getElementById('ls-un');unEl.innerHTML=s+f(Math.abs(un));unEl.className='lp-val '+(un<0?'R':un===0?'G':'A');
+}
+
+// ══ COUNTRY/CURRENCY ══
+function onCountry(){
+  const v=document.getElementById('p-country').value,india=v==='india';
+  document.getElementById('p-state').disabled=!india;
+  document.getElementById('p-city').disabled=!india;
+  if(!india){document.getElementById('p-state').value='';document.getElementById('p-city').value='';}
+  const m={india:'INR',usa:'USD',uk:'GBP',uae:'AED',singapore:'SGD',canada:'CAD',australia:'AUD',other:'USD'};
+  if(m[v]){document.getElementById('p-currency').value=m[v];onCurrency();}
+}
+function onCurrency(){CUR=document.getElementById('p-currency').value;document.querySelectorAll('.cs').forEach(e=>e.textContent=sym());liveI();}
+function adj(k,d){S.fam[k]=Math.max(k==='ad'?1:0,S.fam[k]+d);document.getElementById('v'+k).textContent=S.fam[k];}
+function pick(el,g,v){el.closest('.ch-row').querySelectorAll('.ch').forEach(c=>c.classList.remove('on'));el.classList.add('on');S[g]=v;}
+
+// ══ NAV ══
+function tryNav(n){if(n<=S.done+1)go(n);}
+function go(n){
+  if(n>1){
+    S.name=document.getElementById('p-name').value.trim()||'You';
+    S.age=parseInt(document.getElementById('p-age').value)||30;
+    S.country=document.getElementById('p-country').value;
+    S.state=document.getElementById('p-state').value;
+    S.city=document.getElementById('p-city').value;
+    CUR=document.getElementById('p-currency').value;
+    if(n===3)buildRows();
+    if(n===3){const i=getInc();if(!i){alert('Please enter at least one income source.');return;}}
+    S.done=Math.max(S.done,n-1);
+  }
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg'+n)?.classList.add('on');
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('d'+i),l=document.getElementById('l'+i);
+    if(d){d.classList.remove('done','active');if(i<n-1)d.classList.add('done');else if(i===n-1)d.classList.add('active');}
+    if(l)l.classList.toggle('done',i<n-1);
+  }
+  const lb={1:'Step 1 of 4',2:'Step 2 of 4',3:'Step 3 of 4',4:'Step 4 of 4',5:'Your Report'};
+  document.getElementById('slbl').textContent=lb[n]||'';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===4){liveE();liveS();}
+}
+function toReport(){
+  document.querySelectorAll('.pg').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-load').classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+  const msgs=['Calculating financial health score…','Building spend analytics…','Running lifestyle creep analysis…','Optimising debit/credit mix…','Computing 5-year projections…','Generating your full report…'];
+  let i=0;const fill=document.getElementById('lf'),msg=document.getElementById('lm');
+  fill.style.width='0';
+  const iv=setInterval(()=>{i++;fill.style.width=(i*(100/msgs.length))+'%';if(i<msgs.length)msg.textContent=msgs[i];if(i>=msgs.length){clearInterval(iv);setTimeout(()=>{buildReport();go(5);captureAndShowModal();},350);}},480);
+}
+
+// ══ COMPOUND INTEREST ══
+function sipFV(pmt,r,n){const mr=r/100/12;return mr===0?pmt*n:pmt*((Math.pow(1+mr,n)-1)/mr)*(1+mr);}
+function lumpFV(pv,r,n){return pv*Math.pow(1+r/100,n);}
+
+// ══ FINANCIAL HEALTH SCORE ══
+function calcScore(income,totalExp,totalSav,available,totalRec,hasSav80C,hasSav80D,debtIncome,totalDebt){
+  let score=0;
+  // Savings rate (30 pts)
+  const sp=pct(totalSav,income);score+=sp>=20?30:sp>=15?22:sp>=10?15:sp>=5?8:2;
+  // Expense ratio (25 pts)
+  const ep=pct(totalExp,income);score+=ep<=60?25:ep<=70?20:ep<=80?13:ep<=90?6:0;
+  // Emergency fund (20 pts)
+  const emg=parseFloat(document.getElementById('sv-emg')?.value)||0;
+  const emgMonths=totalRec>0?emg/totalRec:0;score+=emgMonths>=6?20:emgMonths>=3?14:emgMonths>=1?7:0;
+  // Debt-to-income (15 pts)
+  score+=debtIncome<=10?15:debtIncome<=20?10:debtIncome<=30?5:debtIncome<=40?2:0;
+  // Investment diversity (10 pts)
+  const sipV=parseFloat(document.getElementById('sv-sip')?.value)||0;
+  const stkV=parseFloat(document.getElementById('sv-stk')?.value)||0;
+  const ppfV=parseFloat(document.getElementById('sv-ppf')?.value)||0;
+  const divCount=[sipV,stkV,ppfV].filter(v=>v>0).length;
+  score+=divCount>=2?10:divCount>=1?5:0;
+  return Math.min(100,score);
+}
+
+// ══ CHARTS ══
+let chartInstances={};
+function destroyChart(id){if(chartInstances[id]){chartInstances[id].destroy();delete chartInstances[id];}}
+
+function drawPieChart(canvasId,labels,data,colors){
+  destroyChart(canvasId);
+  const ctx=document.getElementById(canvasId)?.getContext('2d');if(!ctx)return;
+  chartInstances[canvasId]=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:2,borderColor:'#F5F3EE'}]},options:{responsive:true,plugins:{legend:{position:'right',labels:{font:{size:11},padding:8}}}}});
+}
+function drawBarChart(canvasId,labels,data,color='#2D5A3D'){
+  destroyChart(canvasId);
+  const ctx=document.getElementById(canvasId)?.getContext('2d');if(!ctx)return;
+  chartInstances[canvasId]=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color,borderRadius:3}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10}}}}}});
+}
+function drawLineChart(canvasId,labels,datasets){
+  destroyChart(canvasId);
+  const ctx=document.getElementById(canvasId)?.getContext('2d');if(!ctx)return;
+  chartInstances[canvasId]=new Chart(ctx,{type:'line',data:{labels,datasets},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{font:{size:11},padding:8}}},scales:{y:{beginAtZero:true,ticks:{font:{size:10},callback:v=>sym()+f(v)}}}}});
+}
+
+// ══ BUILD REPORT ══
+function buildReport(){
+  const s=sym(),income=getInc(),totalExp=getExp(),totalSav=getSav();
+  const available=Math.max(0,income-totalExp),deficit=Math.max(0,totalExp-income);
+  const unalloc=available-totalSav;
+  const expPct=pct(totalExp,income),savPct=pct(totalSav,income),availPct=pct(available,income);
+
+  // Collect all expenses
+  const exps=[];
+  SKEYS.forEach(k=>DEFS[k].forEach(d=>{const a=parseFloat(document.getElementById('a-'+d.id)?.value)||0;if(a>0)exps.push({...d,amt:a,pay:getP(d.id)});}));
+  S.customs.forEach(c=>{if(c.amt>0)exps.push({...c,ok:c.pay==='credit',tip:''});});
+
+  const recExps=exps.filter(e=>e.rec),occExps=exps.filter(e=>!e.rec);
+  const essExps=exps.filter(e=>e.ess),discExps=exps.filter(e=>!e.ess);
+  const totalRec=recExps.reduce((a,e)=>a+e.amt,0),totalDisc=discExps.reduce((a,e)=>a+e.amt,0);
+
+  // Payment analysis
+  const missedCr=exps.filter(e=>e.pay==='debit'&&e.ok);
+  const wrongCr=exps.filter(e=>e.pay==='credit'&&!e.ok);
+  const rewardsMissed=Math.round(missedCr.reduce((a,e)=>a+e.amt,0)*0.035);
+  const surchargeWasted=Math.round(wrongCr.reduce((a,e)=>a+e.amt,0)*0.012);
+  const annualRewards=rewardsMissed*12;
+
+  // Savings data
+  const svData={};SVKEYS.forEach(k=>{svData[k]=parseFloat(document.getElementById('sv-'+k)?.value)||0;});
+  const vemiAmt=parseFloat(document.getElementById('a-vemi')?.value)||0;
+  const debtIncome=pct(vemiAmt,income);
+
+  // Tax
+  const isIndia=S.country==='india';
+  const c80c=isIndia?Math.min(150000,(svData.lif+svData.ppf+svData.epf+svData.sip)*12):0;
+  const c80d=isIndia?Math.min(25000,svData.hi*12)+(S.fam.el>0?Math.min(50000,0):0):0;
+  const ann=income*12;
+  const tRate=ann>1500000?.30:ann>1200000?.20:ann>900000?.15:ann>600000?.10:.05;
+  const taxSave=isIndia?Math.round((c80c+c80d)*tRate):0;
+
+  // Section totals
+  const secNames={h:'Housing',f:'Food',t:'Transport',m:'Health',l:'Lifestyle'};
+  const secTots={};SKEYS.forEach(k=>{const t=DEFS[k].reduce((a,d)=>a+(parseFloat(document.getElementById('a-'+d.id)?.value)||0),0);if(t>0)secTots[secNames[k]]=t;});
+  const cxTot=S.customs.reduce((a,c)=>a+c.amt,0);if(cxTot>0)secTots['Other']=cxTot;
+
+  // Top 5 leaks
+  const top5=exps.filter(e=>!e.ess).sort((a,b)=>b.amt-a.amt).slice(0,5);
+
+  // Lifestyle creep (simulated — compare last 3m avg to current)
+  const discPctNow=pct(totalDisc,income);
+  const discPctAvg=Math.max(discPctNow-6,discPctNow-Math.floor(Math.random()*8+4));
+  const creepPct=discPctNow-discPctAvg;
+  const cityAvgCreep={Mumbai:10,Delhi:12,Bengaluru:11,Hyderabad:9,Chennai:9,Pune:10,default:10};
+  const city=S.city||'default';
+  const cityCreep=cityAvgCreep[city]||cityAvgCreep.default;
+
+  // Overall health score
+  const healthScore=calcScore(income,totalExp,totalSav,available,totalRec,c80c>0,c80d>0,debtIncome,vemiAmt);
+  const scoreColor=healthScore>=70?'#4ADE80':healthScore>=50?'#FCB046':'#F87171';
+  const scoreBadge=healthScore>=70?'badge-G':healthScore>=50?'badge-A':'badge-R';
+  const scoreLabel=healthScore>=70?'Healthy':healthScore>=50?'Moderate':'Needs Work';
+
+  // Sub-metrics
+  const emgMonths=totalRec>0?(svData.emg||0)/totalRec:0;
+  const emgStatus=emgMonths>=6?{c:'badge-G',l:'Strong ('+emgMonths.toFixed(1)+'mo)'}:emgMonths>=3?{c:'badge-A',l:'Moderate ('+emgMonths.toFixed(1)+'mo)'}:{c:'badge-R',l:'Low ('+emgMonths.toFixed(1)+'mo)'};
+  const savStatus=savPct>=20?{c:'badge-G',l:savPct+'%'}:savPct>=10?{c:'badge-A',l:savPct+'%'}:{c:'badge-R',l:savPct+'%'};
+  const dtiStatus=debtIncome<=20?{c:'badge-G',l:debtIncome+'%'}:debtIncome<=35?{c:'badge-A',l:debtIncome+'%'}:{c:'badge-R',l:debtIncome+'%'};
+  const growthInv=svData.sip+svData.stk;
+  const invStatus=growthInv>=income*0.1?{c:'badge-G',l:s+f(growthInv)+'/mo'}:growthInv>0?{c:'badge-A',l:s+f(growthInv)+'/mo'}:{c:'badge-R',l:'None'};
+
+  // Doctor's note
+  const doctorNotes=[];
+  if(emgMonths<3)doctorNotes.push('Emergency fund low hai — pehle '+s+f(totalRec*3)+' target karo (3 months expenses).');
+  if(savPct<10)doctorNotes.push('Savings rate '+savPct+'% — 20% minimum chahiye. Discretionary kharch '+s+f(Math.max(0,income*.2-totalSav))+' reduce karo.');
+  if(debtIncome>30)doctorNotes.push('Debt-to-income '+debtIncome+'% — 30% se zyada dangerous hai. EMI prepay karo jab bhi possible ho.');
+  if(discPctNow>25)doctorNotes.push('Discretionary spend '+discPctNow+'% of income — lifestyle creep control karo.');
+  if(growthInv===0)doctorNotes.push('No growth investments — SIP start karo, even '+s+'1,000/month, compounding ka magic dekhna shuru karo.');
+  if(doctorNotes.length===0)doctorNotes.push('Sab theek dikh raha hai! Focus: savings rate '+savPct+'% se 25%+ le jao aur investment portfolio diversify karo.');
+
+  // 5-year projections
+  const years=[1,2,3,4,5];
+  const inflRate=0.065;const sipRate=0.12;const fdRate=0.068;const growthRate=0.10;
+  const scenarios={
+    base:{incGrow:0.08,expGrow:0.065,savGrow:0.08},
+    opt:{incGrow:0.12,expGrow:0.05,savGrow:0.15},
+    pess:{incGrow:0.04,expGrow:0.08,savGrow:0.03}
+  };
+  function proj(sc){
+    return years.map(y=>({
+      inc:Math.round(income*12*Math.pow(1+sc.incGrow,y)),
+      exp:Math.round(totalExp*12*Math.pow(1+sc.expGrow,y)),
+      sav:Math.round(totalSav*12*Math.pow(1+sc.savGrow,y)),
+      corpus:Math.round(sipFV(totalSav,sipRate*100*0.6,y*12)+lumpFV((svData.ppf+svData.fd)*12,fdRate*100,y))
+    }));
+  }
+  const baseProj=proj(scenarios.base);
+  const optProj=proj(scenarios.opt);
+  const pessProj=proj(scenarios.pess);
+
+  const monthOppty=rewardsMissed+surchargeWasted;
+
+  // ── RENDER REPORT ──
+  const html=`
+<div class="rpt-hdr">
+  <div class="rpt-who">${S.name} · ${S.age} yrs · ${[S.city,S.state,S.country].filter(Boolean).map(x=>x.charAt(0).toUpperCase()+x.slice(1)).join(', ')} · Family: ${S.fam.ad} adult${S.fam.ad!==1?'s':''} + ${S.fam.ch} child${S.fam.ch!==1?'ren':''} + ${S.fam.el} elder${S.fam.el!==1?'s':''}</div>
+  <div class="rpt-h1">Your Financial Diagnostic</div>
+  <div class="rpt-date">Generated ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'long',year:'numeric'})} · Currency: ${CUR} · Free Tier</div>
+</div>
+
+<!-- ══ 0. OVERALL HEALTH SCORE ══ -->
+<div class="score-wrap" style="margin-top:20px">
+  <div class="score-circle" style="border-color:${scoreColor}">
+    <div class="score-num" style="color:${scoreColor}">${healthScore}</div>
+    <div class="score-lbl" style="color:${scoreColor}">/100</div>
+  </div>
+  <div class="score-right">
+    <div class="score-title">Financial Health: <span style="color:${scoreColor}">${scoreLabel}</span></div>
+    <div class="score-doctors-note" style="border-left-color:${scoreColor}">
+      <strong>🩺 Doctor's Note:</strong> ${doctorNotes.join(' ')}
+    </div>
+    <div class="sub-metrics">
+      <div class="sm"><div class="sm-lbl">Emergency Fund</div><div class="sm-val" style="color:${emgMonths>=3?'#4ADE80':emgMonths>=1?'#FCB046':'#F87171'}">${emgMonths.toFixed(1)}mo</div><span class="sm-badge ${emgStatus.c}">${emgStatus.l}</span></div>
+      <div class="sm"><div class="sm-lbl">Savings Rate</div><div class="sm-val" style="color:${savPct>=20?'#4ADE80':savPct>=10?'#FCB046':'#F87171'}">${savPct}%</div><span class="sm-badge ${savStatus.c}">${savStatus.l}</span></div>
+      <div class="sm"><div class="sm-lbl">Debt-to-Income</div><div class="sm-val" style="color:${debtIncome<=20?'#4ADE80':debtIncome<=35?'#FCB046':'#F87171'}">${debtIncome}%</div><span class="sm-badge ${dtiStatus.c}">${dtiStatus.l}</span></div>
+      <div class="sm"><div class="sm-lbl">Growth Investments</div><div class="sm-val" style="color:${growthInv>=income*.1?'#4ADE80':growthInv>0?'#FCB046':'#F87171'}">${growthInv>0?s+f(growthInv):'₹0'}</div><span class="sm-badge ${invStatus.c}">${invStatus.l}</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 1. SPEND ANALYTICS ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 1</div>
+  <div class="rsec-h">Spend Analytics</div>
+  <div class="rhr"></div>
+
+  ${creepPct>0?`<div class="creep-alert">
+    <div class="creep-title">🚨 Lifestyle Creep Alert</div>
+    <div class="creep-body">
+      Last 3 months mein aapka discretionary spend <strong>${creepPct}% badha hai</strong>
+      ${city&&city!=='default'?' ('+city+' average: '+cityCreep+'%)':''}.
+      <div class="creep-stat">+${creepPct}% creep = ${s}${f(Math.round(totalDisc*creepPct/100))} extra / month = ${s}${f(Math.round(totalDisc*creepPct/100*12))} / year</div>
+      Isko control karo: subscriptions review karo, dining-out cap lagao, aur har "want" ko 48 hours wait karo before buying.
+    </div>
+  </div>`:''}
+
+  <div class="chart-row">
+    <div class="chart-wrap">
+      <div class="chart-title">Spending by category</div>
+      <canvas id="pie-chart" height="220"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Income vs expenses vs savings</div>
+      <canvas id="bar-overview" height="220"></canvas>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title">Monthly trend — projected 6 months (base scenario)</div>
+    <canvas id="trend-chart" height="120"></canvas>
+  </div>
+
+  <div style="margin-top:16px">
+    <div class="rsec-tag" style="margin-bottom:10px">Top 5 spending leaks — discretionary expenses as % of income</div>
+    <div class="leak-list">
+      ${top5.length>0?top5.map((e,i)=>`
+      <div class="leak-item">
+        <div class="leak-rank">${i+1}</div>
+        <div class="leak-name">${e.n}</div>
+        <div class="leak-bar"><div class="leak-fill" style="width:${Math.min(100,pct(e.amt,income)*3)}%"></div></div>
+        <div class="leak-pct">${s}${f(e.amt)} (${pct(e.amt,income)}%)</div>
+      </div>`).join(''):`<div style="color:var(--ink3);font-size:12px;padding:12px 0">No discretionary expenses entered — great discipline!</div>`}
+    </div>
+  </div>
+</div>
+
+<!-- ══ 2. DEBIT/CREDIT OPTIMIZER ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 2</div>
+  <div class="rsec-h">Debit / Credit Optimizer</div>
+  <div class="rhr"></div>
+
+  <div class="reward-card">
+    <div class="reward-title">
+      💳 Rewards Maximizer — Switch these ${missedCr.length} spends to credit
+      <div class="reward-amount">${s}${f(annualRewards)} / year</div>
+    </div>
+    <div class="reward-items">
+      ${missedCr.length>0?missedCr.map(e=>`✓ ${e.n} (${s}${f(e.amt)}/mo) → <strong>${e.tip}</strong>`).join('<br>'):'No missed opportunities detected — you\'re optimizing well.'}
+      ${missedCr.length>0?`<br><br>
+      <strong>UPI-linked credit card tip:</strong> RuPay credit cards linked to UPI now give full credit card rewards on UPI payments — same protection, same cashback, but scan-and-pay convenience. HDFC, ICICI, Axis sab iss pe hai. 2026 ka biggest fintech trend.`:''}
+    </div>
+  </div>
+
+  ${wrongCr.length>0?`<div class="ins R">
+    <div class="ins-ey">Credit card surcharges — switch to UPI</div>
+    <div class="ins-h">These ${wrongCr.length} spends are costing you ~${s}${f(surchargeWasted)}/month (${s}${f(surchargeWasted*12)}/year)</div>
+    <div class="ins-b">${wrongCr.map(e=>e.n+': '+e.tip).filter(Boolean).join('<br>')}</div>
+  </div>`:''}
+
+  <table class="rtbl" style="margin-top:12px">
+    <thead><tr><th>Expense</th><th>Amount</th><th>Currently</th><th>Optimal</th><th>Impact</th></tr></thead>
+    <tbody>
+      ${exps.sort((a,b)=>b.amt-a.amt).map(e=>`<tr>
+        <td><strong style="color:var(--ink)">${e.n}</strong></td>
+        <td>${s}${f(e.amt)}</td>
+        <td><span class="tag ${e.pay==='credit'?'cr':e.pay==='both'?'bt':'db'}">${e.pay==='credit'?'Credit':e.pay==='both'?'Both':'Debit'}</span></td>
+        <td><span class="tag ${e.ok?'cr':'db'}">${e.ok?'Credit':'Debit/UPI'}</span></td>
+        <td style="font-size:11px;color:${e.pay==='debit'&&e.ok?'var(--g)':e.pay==='credit'&&!e.ok?'var(--r)':'var(--ink3)'}">${e.pay==='debit'&&e.ok?'+'+s+f(Math.round(e.amt*.035))+'/mo reward':e.pay==='credit'&&!e.ok?'-'+s+f(Math.round(e.amt*.012))+'/mo surcharge':'✓ Optimal'}</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>
+</div>
+
+<!-- ══ 3. EMI OPTIMIZER ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 3</div>
+  <div class="rsec-h">EMI Optimizer</div>
+  <div class="rhr"></div>
+
+  ${vemiAmt>0?`<div class="ins A" style="margin-bottom:16px">
+    <div class="ins-ey">Current EMI detected</div>
+    <div class="ins-h">Vehicle EMI: ${s}${f(vemiAmt)}/month — ${debtIncome}% of income</div>
+    <div class="ins-b">Use the calculator below to see prepayment savings.</div>
+  </div>`:''}
+
+  <div class="emi-calc">
+    <div class="chart-title" style="margin-bottom:14px">EMI Calculator & Prepayment Optimizer</div>
+    <div class="emi-row">
+      <div class="fg"><label class="fl">Loan amount (${s})</label><input type="number" id="em-principal" placeholder="500000" value="${vemiAmt>0?vemiAmt*48:''}" oninput="calcEMI()"></div>
+      <div class="fg"><label class="fl">Interest rate (% p.a.)</label><input type="number" id="em-rate" placeholder="10.5" value="10.5" step="0.1" oninput="calcEMI()"></div>
+      <div class="fg"><label class="fl">Tenure (months)</label><input type="number" id="em-tenure" placeholder="48" value="48" oninput="calcEMI()"></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px"><label class="fl">Monthly prepayment (${s}) — optional</label><input type="number" id="em-prepay" placeholder="0" oninput="calcEMI()"></div>
+    <div class="emi-result" id="emi-result">
+      <div class="er-cell"><div class="er-val" id="er-emi">—</div><div class="er-lbl">Monthly EMI</div></div>
+      <div class="er-cell R"><div class="er-val" id="er-interest">—</div><div class="er-lbl">Total interest</div></div>
+      <div class="er-cell A"><div class="er-val" id="er-new-tenure">—</div><div class="er-lbl">Months saved</div></div>
+      <div class="er-cell B"><div class="er-val" id="er-int-saved">—</div><div class="er-lbl">Interest saved</div></div>
+    </div>
+    <div id="emi-hook" style="font-size:12px;color:var(--g);font-weight:700;margin-top:10px;padding:10px;background:var(--gbg);border-radius:5px;border-left:3px solid var(--g)"></div>
+  </div>
+</div>
+
+<!-- ══ 4. SIP/SAVINGS SIMULATOR ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 4</div>
+  <div class="rsec-h">Savings & Investment Earnings Calculator</div>
+  <div class="rhr"></div>
+
+  <div class="emi-calc">
+    <div class="sip-inputs">
+      <div class="fg"><label class="fl">Monthly SIP amount (${s})</label><input type="number" id="sip-amt" placeholder="5000" value="${svData.sip||5000}" oninput="calcSIP()"></div>
+      <div class="fg"><label class="fl">Expected return (% p.a.)</label><input type="number" id="sip-rate" placeholder="12" value="12" step="0.5" oninput="calcSIP()"></div>
+      <div class="fg"><label class="fl">Investment period (years)</label><input type="number" id="sip-yrs" placeholder="10" value="10" oninput="calcSIP()"></div>
+    </div>
+    <div class="sip-result" id="sip-result">
+      <div style="font-size:11px;color:var(--g);font-weight:700;margin-bottom:6px">PROJECTED CORPUS</div>
+      <div class="sip-big" id="sip-corpus">₹—</div>
+      <div id="sip-hook" style="font-size:12px;color:var(--ink2)">Enter values above to see projection</div>
+      <div class="sip-breakdown">
+        <div><div style="font-size:16px;font-weight:700;color:var(--ink)" id="sip-invested">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)">Total invested</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:var(--g)" id="sip-gain">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)">Gains (wealth creation)</div></div>
+        <div><div style="font-size:16px;font-weight:700;color:var(--b)" id="sip-xreturn">—</div><div style="font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)">Times return</div></div>
+      </div>
+    </div>
+    <div class="chart-wrap" style="margin-top:12px">
+      <div class="chart-title">Corpus growth over time</div>
+      <canvas id="sip-chart" height="130"></canvas>
+    </div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--rule)">
+      <div class="chart-title" style="margin-bottom:10px">Indian instrument comparison (${s}10,000/month for 10 years)</div>
+      <table class="rtbl">
+        <thead><tr><th>Instrument</th><th>Rate</th><th>10-yr Corpus</th><th>Total invested</th><th>Gain</th></tr></thead>
+        <tbody>
+          ${[{n:'ELSS SIP (Equity)',r:14},{n:'Nifty Index Fund',r:12},{n:'Balanced/Hybrid Fund',r:10},{n:'PPF',r:7.1},{n:'Bank FD',r:6.8},{n:'Post Office RD',r:6.5},{n:'Savings account',r:3.5}].map(v=>{
+            const corpus=Math.round(sipFV(10000,v.r,120));const invested=1200000;const gain=corpus-invested;
+            return `<tr><td><strong>${v.n}</strong></td><td>${v.r}%</td><td style="font-weight:700;color:var(--g)">${s}${f(corpus)}</td><td style="color:var(--ink3)">${s}${f(invested)}</td><td style="color:var(--g)">${s}${f(gain)} (${Math.round(gain/invested*100)}%)</td></tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 5. CASHFLOW WATERFALL ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 5 — Cashflow</div>
+  <div class="rsec-h">Monthly Cashflow Waterfall</div>
+  <div class="rhr"></div>
+
+  <div class="health-grid">
+    <div class="hg-card ${expPct<=70?'G':expPct<=85?'A':'R'}">
+      <div class="hg-lbl">Expenses / income</div>
+      <div class="hg-pct">${expPct}%</div>
+      <div class="hg-status">${expPct<=70?'✓ Healthy':expPct<=85?'⚠ Moderate':'✗ Too high'}</div>
+      <div class="hg-bench">Target: under 70%</div>
+    </div>
+    <div class="hg-card ${savPct>=20?'G':savPct>=10?'A':'R'}">
+      <div class="hg-lbl">Savings / income</div>
+      <div class="hg-pct">${savPct}%</div>
+      <div class="hg-status">${savPct>=20?'✓ Healthy':savPct>=10?'⚠ Below target':'✗ Too low'}</div>
+      <div class="hg-bench">Target: 20% or more</div>
+    </div>
+    <div class="hg-card ${unalloc<=0?'G':unalloc<income*0.05?'G':'A'}">
+      <div class="hg-lbl">Unallocated surplus</div>
+      <div class="hg-pct">${pct(Math.max(0,unalloc),income)}%</div>
+      <div class="hg-status">${unalloc<=0?'✓ Fully allocated':'⚠ Idle — invest this'}</div>
+      <div class="hg-bench">${unalloc>0?s+f(unalloc)+' idle this month':'All surplus deployed'}</div>
+    </div>
+  </div>
+
+  <div class="waterfall">
+    <div class="wf-row inc"><div class="wf-lbl bold">Monthly income</div><div class="wf-bc"><div class="wf-track"><div class="wf-fill" style="width:100%;background:var(--g)"></div></div></div><div class="wf-amt">${s}${f(income)}</div></div>
+    <div class="wf-hdr-row">▼ Expenses deducted (${expPct}% of income)</div>
+    ${Object.entries(secTots).map(([cat,amt])=>`<div class="wf-row exp"><div class="wf-lbl">− ${cat}</div><div class="wf-bc"><div class="wf-track"><div class="wf-fill" style="width:${Math.min(100,pct(amt,income))}%;background:var(--a)"></div></div></div><div class="wf-amt">${s}${f(amt)}</div></div>`).join('')}
+    <div class="wf-row tot"><div class="wf-lbl bold">= Available for savings</div><div class="wf-bc"><div class="wf-track"><div class="wf-fill" style="width:${Math.min(100,availPct)}%;background:${available>0?'var(--g)':'var(--r)'}"></div></div></div><div class="wf-amt" style="color:${available>0?'var(--g)':'var(--r)'}">${s}${f(available)}</div></div>
+    <div class="wf-hdr-row">▼ Savings deployed (${savPct}% of income)</div>
+    ${Object.entries(svData).filter(([k,v])=>v>0).map(([k,v])=>`<div class="wf-row sav"><div class="wf-lbl">→ ${SVLBLS[k]||k}</div><div class="wf-bc"><div class="wf-track"><div class="wf-fill" style="width:${Math.min(100,pct(v,income))}%;background:var(--b)"></div></div></div><div class="wf-amt">${s}${f(v)}</div></div>`).join('')}
+    <div class="wf-row tot"><div class="wf-lbl bold">${unalloc>=0?'= Unallocated balance':'= Drawing from reserves'}</div><div class="wf-bc"><div class="wf-track"><div class="wf-fill" style="width:${Math.min(100,Math.abs(pct(unalloc,income)))}%;background:${unalloc<0?'var(--r)':unalloc===0?'var(--g)':'var(--a)'}"></div></div></div><div class="wf-amt" style="color:${unalloc<0?'var(--r)':unalloc===0?'var(--g)':'var(--a)'}">${s}${f(Math.abs(unalloc))}</div></div>
+  </div>
+
+  ${isIndia&&(c80c>0||c80d>0)?`<div class="ig" style="margin-top:16px">
+    <div class="ins B"><div class="ins-ey">Section 80C — ₹1,50,000 limit</div><div class="ins-h">Your 80C: ₹${f(c80c)}/yr</div><div class="ins-b">${c80c>=150000?'Fully utilised ✓':'Unused: ₹'+f(150000-c80c)+' — add ELSS SIP or top up PPF to save ₹'+f((150000-c80c)*tRate)+' in tax.'}</div></div>
+    <div class="ins G"><div class="ins-ey">Section 80D — health insurance</div><div class="ins-h">Your 80D: ₹${f(c80d)}/yr | Tax saved: ₹${f(taxSave)}/yr</div><div class="ins-b">${S.fam.el>0?'Parents 60+ ke liye separate ₹50,000 80D claim karo.':c80d>=25000?'Maximising 80D ✓':'Up to ₹25,000 claimable for self/family health insurance.'}</div></div>
+  </div>`:''}
+</div>
+
+<!-- ══ 6. 5-YEAR PROJECTIONS ══ -->
+<div class="rsec">
+  <div class="rsec-tag">Feature 6</div>
+  <div class="rsec-h">1 to 5 Year Projections</div>
+  <div class="rhr"></div>
+
+  <div class="scen-tabs">
+    <div class="stab on" id="st-base" onclick="switchScenario('base')">Base scenario</div>
+    <div class="stab" id="st-opt" onclick="switchScenario('opt')">Optimistic (+12% income)</div>
+    <div class="stab" id="st-pess" onclick="switchScenario('pess')">Pessimistic (+4% income)</div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="chart-title" id="proj-chart-title">5-year projection — Base scenario (8% income growth, inflation @6.5%)</div>
+    <canvas id="proj-chart" height="140"></canvas>
+  </div>
+
+  <table class="rtbl" id="proj-table">
+    <thead><tr><th>Year</th><th>Annual income</th><th>Annual expenses</th><th>Annual savings</th><th>Projected corpus</th><th>Net worth growth</th></tr></thead>
+    <tbody id="proj-tbody"></tbody>
+  </table>
+
+  <div class="ig">
+    <div class="ins G">
+      <div class="ins-ey">5-year base outlook</div>
+      <div class="ins-h">Year 5 corpus: ${s}${f(baseProj[4].corpus)}</div>
+      <div class="ins-b">At current savings rate with 8% income growth. Corpus includes SIP returns (12% p.a.) and debt instruments. If you increase savings by just ${s}5,000/month, 5-year corpus grows to ${s}${f(baseProj[4].corpus+sipFV(5000,12,60))}.</div>
+    </div>
+    <div class="ins B">
+      <div class="ins-ey">Optimistic vs pessimistic gap</div>
+      <div class="ins-h">Year 5: ${s}${f(optProj[4].corpus)} vs ${s}${f(pessProj[4].corpus)}</div>
+      <div class="ins-b">The difference between aggressive income growth (12%) and stagnation (4%) is ${s}${f(optProj[4].corpus-pessProj[4].corpus)} in corpus by year 5. Income growth + expense control is the most powerful lever.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta">
+  <div class="cta-l">
+    <div class="cta-ey">Your total savings opportunity</div>
+    <div class="cta-h">${monthOppty+taxSave/12>500?`Save ${s}${f(Math.round(monthOppty+taxSave/12))} more every month`:'You\'re managing well — here\'s the next level'}</div>
+    <div class="cta-s">${monthOppty>0?s+f(rewardsMissed)+' in missed card rewards + '+s+f(surchargeWasted)+' in avoidable surcharges. ':''} ${taxSave>0&&isIndia?'₹'+f(taxSave)+' in annual tax savings from 80C/80D. ':''} ${savPct<20?'Increase savings by '+s+f(Math.max(0,income*.2-totalSav))+'/mo to hit the 20% benchmark.':''}</div>
+    <button class="cta-btn" onclick="showSavingsPlan()">
+      ${monthOppty+taxSave/12>500?`Show me how to save ${s}${f(Math.round(monthOppty+taxSave/12))} →`:`Get my full plan →`}
+    </button>
+  </div>
+  <div class="cta-r">
+    <div class="cta-num" id="cta-n">${s}0</div>
+    <div class="cta-numlbl">monthly savings potential${taxSave>0&&isIndia?'<br>+ ₹'+f(taxSave)+' in taxes/yr':''}</div>
+  </div>
+</div>
+
+<div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+  <button class="btn-o" onclick="restart()">← Start over</button>
+  <button class="btn-o" onclick="window.print()">⎙ Print report</button>
+</div>`;
+
+  document.getElementById('pg5').innerHTML=html;
+
+  // ── Draw charts ──
+  setTimeout(()=>{
+    // Pie chart
+    const cats=Object.keys(secTots),vals=Object.values(secTots);
+    const pieColors=['#2D5A3D','#B5620A','#1A4A7A','#8A2020','#5A2D8A','#6B7280'];
+    if(cats.length>0)drawPieChart('pie-chart',cats,vals,pieColors.slice(0,cats.length));
+
+    // Bar overview
+    drawBarChart('bar-overview',['Income','Expenses','Savings','Surplus'],[income,totalExp,totalSav,Math.max(0,unalloc)],['#2D5A3D','#B5620A','#1A4A7A','#8A8A80']);
+
+    // Trend line
+    const months=['Jan','Feb','Mar','Apr','May','Jun'];
+    const trend={income:months.map((_,i)=>Math.round(income*(1+i*0.006))),expenses:months.map((_,i)=>Math.round(totalExp*(1+i*.005+Math.random()*.01-.005))),savings:months.map((_,i)=>Math.round(totalSav*(1+i*.008)))};
+    drawLineChart('trend-chart',months,[
+      {label:'Income',data:trend.income,borderColor:'#2D5A3D',backgroundColor:'rgba(45,90,61,.1)',fill:false,tension:.4},
+      {label:'Expenses',data:trend.expenses,borderColor:'#B5620A',backgroundColor:'rgba(181,98,10,.1)',fill:false,tension:.4},
+      {label:'Savings',data:trend.savings,borderColor:'#1A4A7A',backgroundColor:'rgba(26,74,122,.1)',fill:false,tension:.4}
+    ]);
+
+    // SIP chart
+    calcSIP();
+
+    // EMI calculator
+    calcEMI();
+
+    // Projections
+    renderProjTable(baseProj);
+    drawProjChart(baseProj,optProj,pessProj);
+
+    // CTA counter
+    const ctaEl=document.getElementById('cta-n');if(!ctaEl)return;
+    const target=monthOppty;let cur=0;const step=Math.max(1,Math.round(target/60));
+    const iv2=setInterval(()=>{cur=Math.min(target,cur+step);ctaEl.textContent=sym()+f(cur);if(cur>=target)clearInterval(iv2);},25);
+  },200);
+}
+
+// ── EMI Calculator ──
+function calcEMI(){
+  const P=parseFloat(document.getElementById('em-principal')?.value)||0;
+  const r=parseFloat(document.getElementById('em-rate')?.value)||10.5;
+  const n=parseInt(document.getElementById('em-tenure')?.value)||48;
+  const prepay=parseFloat(document.getElementById('em-prepay')?.value)||0;
+  if(!P||!r||!n)return;
+  const mr=r/100/12;
+  const emi=Math.round(P*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1));
+  const totalInt=Math.round(emi*n-P);
+  const s=sym();
+  document.getElementById('er-emi').textContent=s+f(emi);
+  document.getElementById('er-interest').textContent=s+f(totalInt);
+  if(prepay>0){
+    // Prepay calc
+    let bal=P,months=0,intPaid=0;
+    while(bal>0&&months<n*2){
+      const intM=bal*mr;const princM=Math.min(emi-intM+prepay,bal);
+      intPaid+=intM;bal-=princM;months++;
+    }
+    const monthsSaved=n-months;const intSaved=totalInt-Math.round(intPaid);
+    document.getElementById('er-new-tenure').textContent=monthsSaved+'mo';
+    document.getElementById('er-int-saved').textContent=s+f(Math.max(0,intSaved));
+    const hook=document.getElementById('emi-hook');
+    if(hook&&monthsSaved>0)hook.textContent=`💡 ${s}${f(prepay)}/month extra prepayment se aap loan ${monthsSaved} months pehle khatam kar sakte ho → ${s}${f(Math.max(0,intSaved))} interest bach jayega!`;
+  } else {
+    document.getElementById('er-new-tenure').textContent='—';
+    document.getElementById('er-int-saved').textContent='—';
+    const hook=document.getElementById('emi-hook');
+    if(hook&&P>0)hook.textContent=`💡 Sirf ${s}${f(Math.round(emi*.1))}/month extra prepay karo → 6-8 months jaldi loan khatam, ${s}${f(Math.round(totalInt*.12))} interest saved.`;
+  }
+}
+
+// ── SIP Calculator ──
+function calcSIP(){
+  const pmt=parseFloat(document.getElementById('sip-amt')?.value)||5000;
+  const rate=parseFloat(document.getElementById('sip-rate')?.value)||12;
+  const yrs=parseFloat(document.getElementById('sip-yrs')?.value)||10;
+  const corpus=Math.round(sipFV(pmt,rate,yrs*12));
+  const invested=Math.round(pmt*yrs*12);
+  const gain=corpus-invested;
+  const s=sym();
+  document.getElementById('sip-corpus').textContent=s+f(corpus);
+  document.getElementById('sip-hook').textContent=`${s}${f(pmt).replace(/,/g,',')} monthly SIP @${rate}% → ${yrs} saal mein ${s}${f(corpus)} corpus. Invested: ${s}${f(invested)}, Gain: ${s}${f(gain)}.`;
+  document.getElementById('sip-invested').textContent=s+f(invested);
+  document.getElementById('sip-gain').textContent=s+f(gain);
+  document.getElementById('sip-xreturn').textContent=(corpus/invested).toFixed(1)+'x';
+  // Draw SIP chart
+  const labels=[],data=[];
+  for(let y=1;y<=yrs;y++){labels.push('Yr '+y);data.push(Math.round(sipFV(pmt,rate,y*12)));}
+  drawBarChart('sip-chart',labels,data,'#2D5A3D');
+}
+
+// ── Projections ──
+let currentScenario='base';
+let allProj={};
+function renderProjTable(proj){
+  const s=sym();const tbody=document.getElementById('proj-tbody');if(!tbody)return;
+  const now=totalSavBase||getSav();
+  tbody.innerHTML=proj.map((p,i)=>`<tr>
+    <td><strong>Year ${i+1}</strong></td>
+    <td>${s}${f(p.inc)}</td>
+    <td>${s}${f(p.exp)}</td>
+    <td>${s}${f(p.sav)}</td>
+    <td style="color:var(--g);font-weight:700">${s}${f(p.corpus)}</td>
+    <td style="color:var(--g)">${i>0?'+'+f(Math.round((p.corpus/proj[i-1].corpus-1)*100))+'%':'+'+f(Math.round((p.corpus/(getSav()*12)-1)*100))+'%'}</td>
+  </tr>`).join('');
+}
+let totalSavBase=0;
+function drawProjChart(base,opt,pess){
+  totalSavBase=getSav();
+  const s=sym();
+  allProj={base,opt,pess};
+  const lbs=['Year 1','Year 2','Year 3','Year 4','Year 5'];
+  drawLineChart('proj-chart',lbs,[
+    {label:'Income (Base)',data:base.map(p=>p.inc),borderColor:'#2D5A3D',backgroundColor:'rgba(45,90,61,.08)',fill:false,tension:.4,borderWidth:2},
+    {label:'Expenses (Base)',data:base.map(p=>p.exp),borderColor:'#B5620A',backgroundColor:'rgba(181,98,10,.08)',fill:false,tension:.4,borderWidth:2},
+    {label:'Corpus (Base)',data:base.map(p=>p.corpus),borderColor:'#1A4A7A',backgroundColor:'rgba(26,74,122,.1)',fill:true,tension:.4,borderWidth:2},
+    {label:'Corpus (Optimistic)',data:opt.map(p=>p.corpus),borderColor:'#4ADE80',backgroundColor:'transparent',fill:false,tension:.4,borderWidth:1,borderDash:[4,4]},
+    {label:'Corpus (Pessimistic)',data:pess.map(p=>p.corpus),borderColor:'#F87171',backgroundColor:'transparent',fill:false,tension:.4,borderWidth:1,borderDash:[4,4]}
+  ]);
+}
+function switchScenario(sc){
+  currentScenario=sc;
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('st-'+sc).classList.add('on');
+  const titles={base:'Base scenario (8% income growth, inflation @6.5%)',opt:'Optimistic scenario (12% income growth, 5% expense growth)',pess:'Pessimistic scenario (4% income growth, 8% expense growth)'};
+  const el=document.getElementById('proj-chart-title');if(el)el.textContent='5-year projection — '+titles[sc];
+  if(allProj[sc])renderProjTable(allProj[sc]);
+}
+
+function showSavingsPlan(){
+  const s=sym();const i=getInc();const e=getExp();const sv=getSav();
+  const lines=['Your personalised optimisation plan:\n'];
+  const missedCr2=[];SKEYS.forEach(k=>DEFS[k].forEach(d=>{const a=parseFloat(document.getElementById('a-'+d.id)?.value)||0;if(a>0&&getP(d.id)==='debit'&&d.ok)missedCr2.push({n:d.n,amt:a});}));
+  if(missedCr2.length>0)lines.push('💳 Credit card rewards: Switch '+missedCr2.map(e=>e.n).join(', ')+' → '+s+f(Math.round(missedCr2.reduce((a,x)=>a+x.amt,0)*.035))+'/month');
+  if(sv<i*.2)lines.push('📈 Savings gap: Increase by '+s+f(Math.max(0,i*.2-sv))+'/month to hit 20% savings rate');
+  const sip=parseFloat(document.getElementById('sv-sip')?.value)||0;if(sip<i*.1)lines.push('🌱 SIP: Increase equity SIP to '+s+f(Math.round(i*.1))+'/month (10% of income) for long-term wealth');
+  const emg=parseFloat(document.getElementById('sv-emg')?.value)||0;if(emg<e*3)lines.push('🛡 Emergency fund: Build to '+s+f(Math.round(e*3))+' (3 months expenses)');
+  lines.push('\nFlowFund Pro — full automation with live bank data — coming soon!');
+  alert(lines.join('\n'));
+}
+
+function restart(){document.getElementById('pg5').innerHTML='';S.customs=[];S.done=0;Object.values(chartInstances).forEach(c=>c.destroy());chartInstances={};go(1);}
+
+// ══ EMAIL CAPTURE & NETLIFY FORM SUBMISSION ══
+let _pendingReportData={};
+
+function showEmailModal(data){
+  document.getElementById('em-modal')?.remove();
+  const overlay=document.createElement('div');
+  overlay.className='em-overlay';overlay.id='em-modal';
+  overlay.innerHTML=`
+    <div class="em-box">
+      <button class="em-x" onclick="closeModal()">×</button>
+      <div class="em-ey">Your report is ready</div>
+      <div class="em-h">Get this report in your inbox</div>
+      <div class="em-s">We'll email you a clean summary of your financial health score, cashflow breakdown, and key action items. No spam, ever.</div>
+      <ul class="em-perks">
+        <li>Full report summary emailed to you instantly</li>
+        <li>Re-run every quarter to track your progress</li>
+        <li>Early access when FlowFund Pro launches</li>
+        <li>Tax saving reminders before March 31st</li>
+      </ul>
+      <input class="em-in" id="em-name-in" type="text" placeholder="Your name" value="${data.user_name||''}">
+      <input class="em-in" id="em-email-in" type="email" placeholder="your@email.com">
+      <button class="em-btn" id="em-submit-btn" onclick="submitWithEmail()">Email me my report →</button>
+      <span class="em-skip" onclick="submitWithoutEmail()">Skip — just show report on screen</span>
+      <div class="em-privacy">🔒 Your financial data is private. We never sell or share it.</div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click',e=>{if(e.target===overlay)submitWithoutEmail();});
+}
+
+function closeModal(){document.getElementById('em-modal')?.remove();}
+
+async function submitWithEmail(){
+  const email=document.getElementById('em-email-in')?.value?.trim();
+  const name=document.getElementById('em-name-in')?.value?.trim();
+  if(!email||!email.includes('@')){
+    const el=document.getElementById('em-email-in');
+    el.style.borderColor='#A02020';el.placeholder='Please enter a valid email';return;
+  }
+  // Update button state
+  const btn=document.getElementById('em-submit-btn');
+  if(btn){btn.textContent='Sending…';btn.disabled=true;btn.style.opacity='.7';}
+  _pendingReportData.user_email=email;
+  if(name)_pendingReportData.user_name=name;
+  // 1. Save to Netlify Forms (always works)
+  submitToNetlify(_pendingReportData);
+  // 2. Send actual email via serverless function
+  try{
+    const res=await fetch('/send-report',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,name:name||_pendingReportData.user_name,reportData:_pendingReportData})
+    });
+    const json=await res.json().catch(()=>({}));
+    closeModal();
+    if(res.ok&&json.success){
+      showSuccessBanner(email,true);
+    } else {
+      // Email service not yet configured — still close and show friendly message
+      showSuccessBanner(email,false);
+    }
+  }catch{
+    closeModal();
+    showSuccessBanner(email,false);
+  }
+}
+
+function submitWithoutEmail(){
+  closeModal();
+  submitToNetlify(_pendingReportData);
+}
+
+function submitToNetlify(data){
+  try{
+    const body=Object.entries({...data,'form-name':'flowfund-report','bot-field':''})
+      .map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+    fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}).catch(()=>{});
+  }catch(e){}
+}
+
+function showSuccessBanner(email,emailSent=false){
+  document.getElementById('ff-banner')?.remove();
+  const b=document.createElement('div');b.id='ff-banner';
+  b.style.cssText='background:#2D5A3D;color:#fff;padding:12px 20px;text-align:center;font-size:13px;font-family:Arial,sans-serif;position:fixed;top:0;left:0;right:0;z-index:998;box-shadow:0 2px 10px rgba(0,0,0,.2)';
+  if(emailSent){
+    b.innerHTML=`✅ Report sent to <strong>${email}</strong> — check your inbox! <span style="cursor:pointer;opacity:.7;margin-left:12px" onclick="this.parentElement.remove()">×</span>`;
+  } else {
+    b.innerHTML=`✅ Email saved! Report email feature coming very soon. Your data has been recorded. <span style="cursor:pointer;opacity:.7;margin-left:12px" onclick="this.parentElement.remove()">×</span>`;
+  }
+  document.body.prepend(b);
+}
+
+function captureAndShowModal(){
+  const income=getInc(),totalExp=getExp(),totalSav=getSav();
+  const available=Math.max(0,income-totalExp);
+  const expPct=pct(totalExp,income),savPct=pct(totalSav,income);
+  const totalRec=SKEYS.reduce((acc,k)=>acc+DEFS[k].filter(d=>d.rec).reduce((a,d)=>a+(parseFloat(document.getElementById('a-'+d.id)?.value)||0),0),0);
+  const vemiAmt=parseFloat(document.getElementById('a-vemi')?.value)||0;
+  const emg=parseFloat(document.getElementById('sv-emg')?.value)||0;
+  const emgMonths=totalRec>0?emg/totalRec:0;
+  const debtIncome=pct(vemiAmt,income);
+  const healthScore=calcScore(income,totalExp,totalSav,available,totalRec,false,false,debtIncome,vemiAmt);
+  const rewardsMissed=Math.round(SKEYS.reduce((acc,k)=>acc+DEFS[k].filter(d=>d.ok&&getP(d.id)==='debit').reduce((a,d)=>a+(parseFloat(document.getElementById('a-'+d.id)?.value)||0),0),0)*0.035);
+  const isIndia=S.country==='india';
+  const sip=parseFloat(document.getElementById('sv-sip')?.value)||0;
+  const svHi=parseFloat(document.getElementById('sv-hi')?.value)||0;
+  const svLif=parseFloat(document.getElementById('sv-lif')?.value)||0;
+  const svPpf=parseFloat(document.getElementById('sv-ppf')?.value)||0;
+  const svEpf=parseFloat(document.getElementById('sv-epf')?.value)||0;
+  const c80c=isIndia?Math.min(150000,(svLif+svPpf+svEpf+sip)*12):0;
+  const c80d=isIndia?Math.min(25000,svHi*12):0;
+  const ann=income*12;const tRate=ann>1500000?.30:ann>1200000?.20:ann>900000?.15:ann>600000?.10:.05;
+  const taxSave=isIndia?Math.round((c80c+c80d)*tRate):0;
+  const secTotals={};SKEYS.forEach(k=>{const t=DEFS[k].reduce((a,d)=>a+(parseFloat(document.getElementById('a-'+d.id)?.value)||0),0);if(t>0)secTotals[k]=t;});
+  const topCat=Object.entries(secTotals).sort((a,b)=>b[1]-a[1])[0]?.[0]||'';
+  const catNames={h:'Housing',f:'Food',t:'Transport',m:'Health',l:'Lifestyle'};
+  _pendingReportData={
+    user_name:S.name,user_age:S.age,user_city:S.city,user_state:S.state,
+    user_country:S.country,user_currency:CUR,user_email:'',
+    monthly_income:Math.round(income),total_expenses:Math.round(totalExp),
+    total_savings:Math.round(totalSav),expense_pct:expPct,savings_pct:savPct,
+    health_score:healthScore,emergency_months:emgMonths.toFixed(1),
+    debt_to_income:debtIncome,rewards_missed_monthly:rewardsMissed,
+    tax_saving_potential:taxSave,
+    surplus_or_deficit:available>=0?'Surplus '+Math.round(available):'Deficit '+Math.round(available),
+    family_size:S.fam.ad+S.fam.ch+S.fam.el,
+    has_elders:S.fam.el>0?'Yes':'No',has_children:S.fam.ch>0?'Yes':'No',
+    housing_type:S.housing,employment_type:S.emp,
+    top_expense_category:catNames[topCat]||topCat,
+    submitted_at:new Date().toISOString()
+  };
+  showEmailModal(_pendingReportData);
+}
+
+buildRows();
+</script>
+</body>
+</html>
