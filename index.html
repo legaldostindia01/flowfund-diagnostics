@@ -1348,14 +1348,11 @@ async function submitWithEmail(){
     const el=document.getElementById('em-email-in');
     el.style.borderColor='#A02020';el.placeholder='Please enter a valid email';return;
   }
-  // Update button state
   const btn=document.getElementById('em-submit-btn');
   if(btn){btn.textContent='Sending…';btn.disabled=true;btn.style.opacity='.7';}
   _pendingReportData.user_email=email;
   if(name)_pendingReportData.user_name=name;
-  // 1. Save to Netlify Forms (always works)
   submitToNetlify(_pendingReportData);
-  // 2. Send actual email via serverless function
   try{
     const res=await fetch('/send-report',{
       method:'POST',
@@ -1364,12 +1361,7 @@ async function submitWithEmail(){
     });
     const json=await res.json().catch(()=>({}));
     closeModal();
-    if(res.ok&&json.success){
-      showSuccessBanner(email,true);
-    } else {
-      // Email service not yet configured — still close and show friendly message
-      showSuccessBanner(email,false);
-    }
+    showSuccessBanner(email,res.ok&&json.success);
   }catch{
     closeModal();
     showSuccessBanner(email,false);
