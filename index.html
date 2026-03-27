@@ -332,6 +332,13 @@ canvas{max-width:100%}
   <input name="employment_type" type="text">
   <input name="top_expense_category" type="text">
   <input name="submitted_at" type="text">
+  <input name="user_phone" type="tel">
+</form>
+<form name="flowfund-callback" netlify netlify-honeypot="bot-field" hidden>
+  <input name="bot-field">
+  <input name="phone" type="tel">
+  <input name="name" type="text">
+  <input name="submitted_at" type="text">
 </form>
 
 <div class="shell">
@@ -359,6 +366,16 @@ canvas{max-width:100%}
   <div class="r2">
     <div class="fg"><label class="fl">Full name</label><input type="text" id="p-name" placeholder="e.g. Ramesh Kumar"></div>
     <div class="fg"><label class="fl">Age</label><input type="number" id="p-age" placeholder="34" min="18" max="80"></div>
+  </div>
+  <div class="r2">
+    <div class="fg"><label class="fl">Email address</label><input type="email" id="p-email" placeholder="your@email.com"></div>
+    <div class="fg"><label class="fl">Phone number</label><input type="tel" id="p-phone" placeholder="e.g. 98765 43210"></div>
+  </div>
+  <div style="display:flex;align-items:flex-start;gap:10px;background:var(--gbg);border:1px solid var(--gbd);border-radius:5px;padding:11px 14px;margin-bottom:4px">
+    <span style="font-size:16px;flex-shrink:0;margin-top:1px">🔒</span>
+    <div style="font-size:11px;color:var(--ink2);line-height:1.65">
+      <strong style="color:var(--ink)">Your data is private and secure.</strong> We use your contact details only to send you your report and — if you choose — to book a free consultation. We never sell, share, or spam. You can opt out anytime.
+    </div>
   </div>
   <div class="r3">
     <div class="fg"><label class="fl">Country</label>
@@ -560,7 +577,7 @@ canvas{max-width:100%}
 </div>
 <script>
 // ══ STATE ══
-const S={name:'',age:30,country:'india',state:'',city:'',currency:'INR',emp:'salaried',housing:'own',transport:'own',fam:{ch:0,ad:1,el:0},customs:[],done:0};
+const S={name:'',age:30,email:'',phone:'',country:'india',state:'',city:'',currency:'INR',emp:'salaried',housing:'own',transport:'own',fam:{ch:0,ad:1,el:0},customs:[],done:0};
 const CSYM={INR:'₹',USD:'$',GBP:'£',AED:'AED ',SGD:'SGD ',CAD:'CAD ',AUD:'AUD '};
 let CUR='INR';
 const f=n=>Math.round(n).toLocaleString('en-IN');
@@ -711,6 +728,8 @@ function go(n){
   if(n>1){
     S.name=document.getElementById('p-name').value.trim()||'You';
     S.age=parseInt(document.getElementById('p-age').value)||30;
+    S.email=document.getElementById('p-email').value.trim()||'';
+    S.phone=document.getElementById('p-phone').value.trim()||'';
     S.country=document.getElementById('p-country').value;
     S.state=document.getElementById('p-state').value;
     S.city=document.getElementById('p-city').value;
@@ -1146,6 +1165,22 @@ function buildReport(){
   </div>
 </div>
 
+<!-- ══ CALLBACK CTA ══ -->
+<div id="callback-cta" style="background:linear-gradient(135deg,#1A1A18 0%,#2D3A2D 100%);border-radius:8px;padding:28px 32px;margin-top:36px;border:1px solid rgba(45,90,61,0.4)">
+  <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(74,222,128,0.7);margin-bottom:10px">Free Consultation — No Obligation</div>
+  <div style="font-size:26px;font-family:Georgia,serif;color:#fff;line-height:1.2;margin-bottom:8px">Your ₹1 Crore roadmap is one conversation away</div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7;margin-bottom:20px;max-width:520px">Based on your financial profile, our CA will show you exactly how to get there — a personalised plan built around your numbers, not generic advice.</div>
+  <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;max-width:480px">
+    <div style="flex:1;min-width:180px">
+      <div style="font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:6px">Your phone number</div>
+      <input id="cb-phone" type="tel" placeholder="e.g. 98765 43210" style="width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:5px;padding:11px 14px;color:#fff;font-family:Arial,sans-serif;font-size:14px;outline:none;transition:border-color .2s" onfocus="this.style.borderColor='#4ADE80'" onblur="this.style.borderColor='rgba(255,255,255,0.18)'" oninput="document.getElementById('cb-phone').style.borderColor='rgba(255,255,255,0.35)'">
+    </div>
+    <button onclick="submitCallback()" style="padding:12px 22px;background:#2D5A3D;color:#fff;border:none;border-radius:5px;font-family:Arial,sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s;white-space:nowrap;height:44px" onmouseover="this.style.background='#3D7A54'" onmouseout="this.style.background='#2D5A3D'">Request My Free Callback →</button>
+  </div>
+  <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:10px">We call within 24 hours. No spam, no hard sell.</div>
+  <div id="cb-msg" style="display:none;margin-top:12px;font-size:12px;padding:10px 14px;border-radius:5px"></div>
+</div>
+
 <!-- CTA -->
 <div class="cta">
   <div class="cta-l">
@@ -1330,7 +1365,7 @@ function showEmailModal(data){
         <li>Tax saving reminders before March 31st</li>
       </ul>
       <input class="em-in" id="em-name-in" type="text" placeholder="Your name" value="${data.user_name||''}">
-      <input class="em-in" id="em-email-in" type="email" placeholder="your@email.com">
+      <input class="em-in" id="em-email-in" type="email" placeholder="your@email.com" value="${data.user_email||''}">
       <button class="em-btn" id="em-submit-btn" onclick="submitWithEmail()">Email me my report →</button>
       <span class="em-skip" onclick="submitWithoutEmail()">Skip — just show report on screen</span>
       <div class="em-privacy">🔒 Your financial data is private. We never sell or share it.</div>
@@ -1419,7 +1454,8 @@ function captureAndShowModal(){
   const catNames={h:'Housing',f:'Food',t:'Transport',m:'Health',l:'Lifestyle'};
   _pendingReportData={
     user_name:S.name,user_age:S.age,user_city:S.city,user_state:S.state,
-    user_country:S.country,user_currency:CUR,user_email:'',
+    user_country:S.country,user_currency:CUR,user_email:S.email||'',
+    user_phone:S.phone||'',
     monthly_income:Math.round(income),total_expenses:Math.round(totalExp),
     total_savings:Math.round(totalSav),expense_pct:expPct,savings_pct:savPct,
     health_score:healthScore,emergency_months:emgMonths.toFixed(1),
@@ -1432,10 +1468,38 @@ function captureAndShowModal(){
     top_expense_category:catNames[topCat]||topCat,
     submitted_at:new Date().toISOString()
   };
+  // Pre-fill callback phone if entered in Step 1
+  if(S.phone){const cbp=document.getElementById('cb-phone');if(cbp)cbp.value=S.phone;}
   showEmailModal(_pendingReportData);
 }
 
 buildRows();
+
+// ══ CALLBACK CTA ══
+function submitCallback(){
+  const phone=document.getElementById('cb-phone')?.value?.trim();
+  const msg=document.getElementById('cb-msg');
+  if(!phone||phone.length<7){
+    const inp=document.getElementById('cb-phone');
+    inp.style.borderColor='#F87171';inp.placeholder='Please enter a valid number';
+    return;
+  }
+  // Submit to Netlify form
+  const name=_pendingReportData?.user_name||S.name||'';
+  const body=Object.entries({'form-name':'flowfund-callback','bot-field':'',phone,name,'submitted_at':new Date().toISOString()})
+    .map(([k,v])=>encodeURIComponent(k)+'='+encodeURIComponent(v??'')).join('&');
+  fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}).catch(()=>{});
+  // Show confirmation
+  const btn=document.querySelector('#callback-cta button');
+  if(btn){btn.textContent='✓ Request sent!';btn.style.background='#4ADE80';btn.style.color='#1A1A18';btn.disabled=true;}
+  if(msg){
+    msg.style.display='block';
+    msg.style.background='rgba(74,222,128,0.12)';
+    msg.style.border='1px solid rgba(74,222,128,0.3)';
+    msg.style.color='#4ADE80';
+    msg.innerHTML='✓ Got it! We\'ll call <strong>'+phone+'</strong> within 24 hours to build your ₹1 Crore plan.';
+  }
+}
 </script>
 </body>
 </html>
